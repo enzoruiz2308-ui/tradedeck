@@ -1,11 +1,5 @@
-// app/index.tsx
+import { HomeScreen as TradeDeckHomeScreen } from '@/src/screens/tabs/HomeScreen';
 
-import { View, Text } from 'react-native';
-
-export default function HomeScreen() {
-  return (
-    <View>
-      <Text>TradeDeck</Text>
-    </View>
-  );
+export default function HomeRoute() {
+  return <TradeDeckHomeScreen />;
 }
