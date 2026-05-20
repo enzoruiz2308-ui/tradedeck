@@ -40,7 +40,6 @@ export function HomeScreen() {
         <Chip label="Todos" active={!query} onPress={() => setQuery('')} />
         <Chip label="Pokemon" onPress={() => setQuery('pokemon')} />
         <Chip label="One Piece" onPress={() => setQuery('one piece')} />
-        <Chip label="Near Mint" onPress={() => setQuery('near mint')} />
       </ScrollView>
 
       {featured.length ? (
