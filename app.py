@@ -6,7 +6,7 @@ import bcrypt
 
 app = Flask(__name__)
 
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///tradedeck.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://tradedeck:tradedeck123@192.168.47.160/tradedeck"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
