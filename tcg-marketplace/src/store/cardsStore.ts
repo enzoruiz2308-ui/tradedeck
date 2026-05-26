@@ -41,11 +41,3 @@ export const useCardsStore = create<CardsState>((set, get) => ({
   loadMore: () => set((state) => ({ visibleCount: Math.min(state.visibleCount + 4, filterCards(state.cards, state.filters).length) })),
   resetFilters: () => set({ filters: defaultFilters, visibleCount: 6 }),
 }));
-
-export function selectFilteredCards(state: CardsState) {
-  return filterCards(state.cards, state.filters).slice(0, state.visibleCount);
-}
-
-export function selectAllFilteredCards(state: CardsState) {
-  return filterCards(state.cards, state.filters);
-}

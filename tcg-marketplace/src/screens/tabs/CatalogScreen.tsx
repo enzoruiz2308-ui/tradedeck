@@ -9,10 +9,11 @@ import { SectionHeader } from '@/src/components/layout/SectionHeader';
 import { Button } from '@/src/components/ui/Button';
 import { Chip } from '@/src/components/ui/Chip';
 import { StateView } from '@/src/components/ui/StateView';
-import { selectAllFilteredCards, selectFilteredCards, useCardsStore } from '@/src/store/cardsStore';
+import { useCardsStore } from '@/src/store/cardsStore';
 import { useUserStore } from '@/src/store/userStore';
 import { palette } from '@/src/theme/tokens';
 import { CardRarity, TcgGame } from '@/src/types';
+import { filterCards } from '@/src/utils/filters';
 
 const games: { label: string; value: TcgGame | 'all' }[] = [
   { label: 'Todos', value: 'all' },
@@ -23,10 +24,23 @@ const games: { label: string; value: TcgGame | 'all' }[] = [
 const rarities: (CardRarity | 'all')[] = ['all', 'Common', 'Uncommon', 'Rare', 'Super Rare', 'Secret Rare'];
 
 export function CatalogScreen() {
-  const cards = useCardsStore(selectFilteredCards);
-  const allFiltered = useCardsStore(selectAllFilteredCards);
-  const { filters, visibleCount, setQuery, setFilters, loadMore, resetFilters } = useCardsStore();
-  const { collection, addToCollection } = useUserStore();
+  const cards = useCardsStore((state) => state.cards);
+  const filters = useCardsStore((state) => state.filters);
+  const visibleCount = useCardsStore((state) => state.visibleCount);
+
+  const setQuery = useCardsStore((state) => state.setQuery);
+  const setFilters = useCardsStore((state) => state.setFilters);
+  const loadMore = useCardsStore((state) => state.loadMore);
+  const resetFilters = useCardsStore((state) => state.resetFilters);
+  const allFiltered = useMemo(() => {
+  return filterCards(cards, filters);
+  }, [cards, filters]);
+
+  const visibleCards = useMemo(() => {
+    return allFiltered.slice(0, visibleCount);
+  }, [allFiltered, visibleCount]);
+  const collection = useUserStore((state) => state.collection);
+  const addToCollection = useUserStore((state) => state.addToCollection);
   const sets = useMemo(() => Array.from(new Set(allFiltered.map((card) => card.set))), [allFiltered]);
 
   return (
@@ -67,9 +81,9 @@ export function CatalogScreen() {
       </View>
 
       <SectionHeader title="Resultados" action={`${allFiltered.length} cartas`} />
-      {cards.length ? (
+      {visibleCards.length ? (
         <View style={styles.grid}>
-          {cards.map((card) => (
+          {visibleCards.map((card) => (
             <TradingCardTile
               key={card.id}
               card={card}
