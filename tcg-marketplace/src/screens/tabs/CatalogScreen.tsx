@@ -40,7 +40,6 @@ export function CatalogScreen() {
     return allFiltered.slice(0, visibleCount);
   }, [allFiltered, visibleCount]);
   const collection = useUserStore((state) => state.collection);
-  const addToCollection = useUserStore((state) => state.addToCollection);
   const sets = useMemo(() => Array.from(new Set(allFiltered.map((card) => card.set))), [allFiltered]);
 
   return (
@@ -89,7 +88,6 @@ export function CatalogScreen() {
               card={card}
               owned={collection.some((item) => item.id === card.id)}
               onPress={() => {
-                addToCollection(card);
                 router.push(`/card-details?id=${card.id}`);
               }}
             />
@@ -99,7 +97,7 @@ export function CatalogScreen() {
         <StateView title="No hay cartas" description="Ajusta filtros o borra la busqueda." action="Limpiar filtros" onAction={resetFilters} />
       )}
 
-      {visibleCount < allFiltered.length ? <Button title="Cargar mas" variant="ghost" onPress={loadMore} /> : null}
+      {visibleCount < allFiltered.length ? <Button title="Cargar más" variant="ghost" onPress={loadMore} /> : null}
       {sets.length ? <Text style={styles.sets}>Sets visibles: {sets.join(', ')}</Text> : null}
     </Screen>
   );

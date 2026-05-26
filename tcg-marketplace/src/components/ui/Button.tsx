@@ -21,7 +21,15 @@ export function Button({ title, variant = 'primary', disabled, style, ...props }
         style,
       ]}
       {...props}>
-      <Text style={[styles.label, variant !== 'primary' && styles.darkLabel, variant === 'danger' && styles.dangerLabel]}>{title}</Text>
+      <Text 
+        style={[
+          styles.label, 
+          variant !== 'primary' && styles.darkLabel, 
+          variant === 'danger' && styles.dangerLabel
+        ]}
+      >
+        {title}
+      </Text>
     </Pressable>
   );
 }
@@ -33,6 +41,7 @@ const styles = StyleSheet.create({
     minHeight: 48,
     justifyContent: 'center',
     paddingHorizontal: 18,
+    paddingVertical: 12, 
   },
   primary: {
     backgroundColor: palette.ink,
@@ -58,13 +67,15 @@ const styles = StyleSheet.create({
   },
   label: {
     color: '#ffffff',
-    fontSize: 15,
+    fontSize: 18,         
     fontWeight: '800',
+    textAlign: 'center',  
+    flexShrink: 1,        
   },
   darkLabel: {
     color: palette.ink,
   },
   dangerLabel: {
     color: palette.onePiece,
-  },
+  }
 });

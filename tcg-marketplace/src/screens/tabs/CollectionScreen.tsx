@@ -28,7 +28,7 @@ export function CollectionScreen() {
   return (
     <Screen>
       <View>
-        <Text style={styles.title}>Coleccion</Text>
+        <Text style={styles.title}>Colección</Text>
         <Text style={styles.subtitle}>Controla valor estimado, progreso de sets y cartas pendientes.</Text>
       </View>
 
@@ -60,18 +60,10 @@ export function CollectionScreen() {
           ))}
         </View>
       ) : (
-        <StateView title="Coleccion vacia" description="Anade cartas desde el catalogo o desde las sugerencias." />
+        <StateView title="Coleccion vacia" description="Anade cartas desde el catálogo." />
       )}
 
-      <SectionHeader title="Sugerencias para anadir" />
-      <View style={styles.grid}>
-        {missing.slice(0, 4).map((card) => (
-          <View key={card.id} style={styles.tileWrap}>
-            <TradingCardTile card={card} />
-            <Button title="Anadir" variant="ghost" onPress={() => addToCollection(card)} />
-          </View>
-        ))}
-      </View>
+      
     </Screen>
   );
 }
