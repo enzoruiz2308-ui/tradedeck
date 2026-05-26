@@ -1,10 +1,22 @@
-export type TcgGame = 'pokemon' | 'onepiece';
+export type TcgSource = 'pokemon' | 'onepiece';
+
+export type TcgGame = TcgSource;
 
 export type ListingType = 'sell' | 'buy';
+
+export type ListingStatus = 'active' | 'reserved' | 'sold' | 'paused' | 'expired';
 
 export type CardCondition = 'Mint' | 'Near Mint' | 'Excellent' | 'Good' | 'Played' | 'Poor';
 
 export type CardRarity = 'Common' | 'Uncommon' | 'Rare' | 'Super Rare' | 'Secret Rare';
+
+export type GradingCompany = 'raw' | 'PSA' | 'BGS' | 'CGC' | 'ACE' | 'other';
+
+export interface GradingInfo {
+  company: GradingCompany;
+  grade?: string;
+  certificateNumber?: string;
+}
 
 export interface User {
   id: string;
@@ -18,7 +30,8 @@ export interface User {
 
 export interface TradingCard {
   id: string;
-  game: TcgGame;
+  tcg: TcgSource;
+  game?: TcgSource;
   name: string;
   set: string;
   rarity: CardRarity;
@@ -29,15 +42,18 @@ export interface TradingCard {
 export interface Listing {
   id: string;
   type: ListingType;
-  title: string;
-  description: string;
+  cardId: string;
+  tcg: TcgSource;
+  sellerId: string;
+  description?: string;
   price: number;
-  card: TradingCard;
-  seller: User;
+  card?: TradingCard;
+  seller?: User;
   condition: CardCondition;
-  images: string[];
-  featured?: boolean;
+  grading: GradingInfo;
+  status: ListingStatus;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface AuthTokens {
@@ -58,21 +74,82 @@ export interface AuthResponse extends AuthTokens {
   user: User;
 }
 
+export interface PaginationParams {
+  page: number;
+  limit: number;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface CardQueryParams extends Partial<PaginationParams> {
+  query?: string;
+  tcg?: TcgSource | 'all';
+  set?: string;
+  rarity?: CardRarity | 'all';
+  minPrice?: number;
+  maxPrice?: number;
+  sortBy?: 'name' | 'price' | 'rarity' | 'set';
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface ListingQueryParams extends Partial<PaginationParams> {
+  query?: string;
+  tcg?: TcgSource | 'all';
+  status?: ListingStatus | 'all';
+  type?: ListingType | 'all';
+  condition?: CardCondition | 'all';
+  minPrice?: number;
+  maxPrice?: number;
+  sortBy?: 'createdAt' | 'price' | 'status';
+  sortOrder?: 'asc' | 'desc';
+}
+
 export interface CardFilters {
   query: string;
-  game?: TcgGame | 'all';
+  tcg?: TcgSource | 'all';
   rarity?: CardRarity | 'all';
   set?: string;
   minPrice?: number;
   maxPrice?: number;
-  sortBy: 'name' | 'priceAsc' | 'priceDesc' | 'rarity';
+  sortBy: 'name' | 'price' | 'rarity' | 'set';
+  sortOrder: 'asc' | 'desc';
 }
 
 export interface ListingFormValues {
   type: ListingType;
   cardId: string;
-  title: string;
-  description: string;
+  tcg: TcgSource;
+  description?: string;
   price: number;
   condition: CardCondition;
+  grading: GradingInfo;
+  status: ListingStatus;
+}
+
+export interface CollectionItem {
+  id: string;
+  cardId: string;
+  tcg: TcgSource;
+  card?: TradingCard;
+  quantity: number;
+  condition: CardCondition;
+  grading: GradingInfo;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CollectionItemPayload {
+  cardId: string;
+  tcg: TcgSource;
+  quantity: number;
+  condition: CardCondition;
+  grading: GradingInfo;
+  notes?: string;
 }

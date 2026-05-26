@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { router } from 'expo-router';
+import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -14,53 +15,66 @@ import { useAuthStore } from '@/src/store/authStore';
 import { useCardsStore } from '@/src/store/cardsStore';
 import { useListingsStore } from '@/src/store/listingsStore';
 import { palette } from '@/src/theme/tokens';
-import { CardCondition } from '@/src/types';
+import { CardCondition, GradingCompany } from '@/src/types';
+import { getCardTcg } from '@/src/utils/filters';
 import { ListingForm, listingSchema } from '@/src/utils/validation';
 
 const conditions: CardCondition[] = ['Mint', 'Near Mint', 'Excellent', 'Good', 'Played', 'Poor'];
+const gradingCompanies: GradingCompany[] = ['raw', 'PSA', 'BGS', 'CGC', 'ACE', 'other'];
 
 export function CreateListingScreen() {
-  const { user, demoLogin } = useAuthStore();
-  const { cards } = useCardsStore();
-  const { createListing } = useListingsStore();
+  const { isAuthenticated } = useAuthStore();
+  const { cards, isLoading: isLoadingCards, error: cardsError, loadCards, loadMore, page, totalPages } = useCardsStore();
+  const { createListing, isMutating, error } = useListingsStore();
   const { control, handleSubmit, watch, setValue, formState, reset } = useForm<ListingForm>({
     resolver: zodResolver(listingSchema),
     defaultValues: {
       type: 'sell',
-      cardId: cards[0]?.id ?? '',
-      title: '',
+      cardId: '',
+      tcg: 'pokemon',
       description: '',
       price: 10,
       condition: 'Near Mint',
+      grading: { company: 'raw', grade: '', certificateNumber: '' },
+      status: 'active',
     },
     mode: 'onChange',
   });
 
-  const selectedCard = cards.find((card) => card.id === watch('cardId')) ?? cards[0];
+  useEffect(() => {
+    if (!cards.length) {
+      void loadCards();
+    }
+  }, [cards.length, loadCards]);
+
+  const selectedCard = cards.find((card) => card.id === watch('cardId'));
   const listingType = watch('type');
   const condition = watch('condition');
+  const gradingCompany = watch('grading.company');
+
+  const selectCard = (cardId: string) => {
+    const card = cards.find((item) => item.id === cardId);
+    if (!card) return;
+    setValue('cardId', card.id, { shouldValidate: true });
+    setValue('tcg', getCardTcg(card) ?? 'pokemon', { shouldValidate: true });
+  };
 
   const onSubmit = handleSubmit(async (values) => {
-    const seller = user ?? (await demoLogin(), useAuthStore.getState().user);
-    if (!seller || !selectedCard) return;
-    await createListing(values, selectedCard, seller);
+    if (!isAuthenticated) {
+      router.replace('/(auth)/login');
+      return;
+    }
+
+    await createListing({ ...values, status: 'active' });
     reset();
     router.push('/(tabs)');
   });
-
-  if (!selectedCard) {
-    return (
-      <Screen>
-        <StateView title="Catalogo vacio" description="No hay cartas disponibles para publicar anuncios." />
-      </Screen>
-    );
-  }
 
   return (
     <Screen>
       <View>
         <Text style={styles.title}>Publicar anuncio</Text>
-        <Text style={styles.subtitle}>Crea un anuncio de venta o busqueda con preview inmediata.</Text>
+        <Text style={styles.subtitle}>Crea un anuncio backend-ready. Las imagenes se resuelven desde la carta oficial en backend.</Text>
       </View>
 
       <View style={styles.block}>
@@ -72,33 +86,26 @@ export function CreateListingScreen() {
       </View>
 
       <View style={styles.block}>
-        <SectionHeader title="Carta" action={selectedCard.name} />
-        <View style={styles.grid}>
-          {cards.slice(0, 6).map((card) => (
-            <TradingCardTile
-              key={card.id}
-              card={card}
-              selected={selectedCard.id === card.id}
-              onPress={() => setValue('cardId', card.id, { shouldValidate: true })}
-            />
-          ))}
-        </View>
+        <SectionHeader title="Carta" action={selectedCard?.name ?? 'Selecciona una'} />
+        {isLoadingCards && !cards.length ? <StateView title="Cargando cartas" loading /> : null}
+        {cardsError ? <StateView title="No se pueden cargar cartas" description={cardsError} action="Reintentar" onAction={loadCards} /> : null}
+        {cards.length ? (
+          <View style={styles.grid}>
+            {cards.map((card) => (
+              <TradingCardTile key={card.id} card={card} selected={selectedCard?.id === card.id} onPress={() => selectCard(card.id)} />
+            ))}
+          </View>
+        ) : null}
+        {page < totalPages ? <Button title="Cargar mas cartas" variant="ghost" onPress={loadMore} /> : null}
       </View>
 
       <View style={styles.form}>
         <Controller
           control={control}
-          name="title"
-          render={({ field, fieldState }) => (
-            <FormInput label="Titulo" placeholder="Charizard ex Near Mint" value={field.value} onChangeText={field.onChange} error={fieldState.error?.message} />
-          )}
-        />
-        <Controller
-          control={control}
           name="description"
           render={({ field, fieldState }) => (
             <FormInput
-              label="Descripcion"
+              label="Descripcion opcional"
               multiline
               placeholder="Estado, entrega, sleeves, condiciones..."
               value={field.value}
@@ -124,7 +131,7 @@ export function CreateListingScreen() {
       </View>
 
       <View style={styles.block}>
-        <SectionHeader title="Estado" />
+        <SectionHeader title="Estado carta" />
         <View style={styles.chips}>
           {conditions.map((item) => (
             <Chip key={item} label={item} active={condition === item} onPress={() => setValue('condition', item, { shouldValidate: true })} />
@@ -132,14 +139,36 @@ export function CreateListingScreen() {
         </View>
       </View>
 
-      <View style={styles.preview}>
-        <Text style={styles.previewTitle}>Preview</Text>
-        <Text style={styles.previewText}>
-          {listingType === 'sell' ? 'Vendes' : 'Buscas'} {selectedCard.name} en estado {condition}. La imagen principal usara la carta seleccionada hasta integrar upload real.
-        </Text>
+      <View style={styles.block}>
+        <SectionHeader title="Grading" />
+        <View style={styles.chips}>
+          {gradingCompanies.map((company) => (
+            <Chip
+              key={company}
+              label={company === 'raw' ? 'Raw' : company}
+              active={gradingCompany === company}
+              onPress={() => setValue('grading.company', company, { shouldValidate: true })}
+            />
+          ))}
+        </View>
+        {gradingCompany !== 'raw' ? (
+          <View style={styles.form}>
+            <Controller
+              control={control}
+              name="grading.grade"
+              render={({ field }) => <FormInput label="Nota" placeholder="10" value={field.value} onChangeText={field.onChange} />}
+            />
+            <Controller
+              control={control}
+              name="grading.certificateNumber"
+              render={({ field }) => <FormInput label="Certificado" placeholder="Opcional" value={field.value} onChangeText={field.onChange} />}
+            />
+          </View>
+        ) : null}
       </View>
 
-      <Button title="Publicar anuncio" disabled={!formState.isValid} onPress={onSubmit} />
+      {error ? <StateView title="No se ha podido publicar" description={error} /> : null}
+      <Button title={isMutating ? 'Publicando...' : 'Publicar anuncio'} disabled={!formState.isValid || !selectedCard || isMutating} onPress={onSubmit} />
     </Screen>
   );
 }
@@ -175,22 +204,5 @@ const styles = StyleSheet.create({
   textarea: {
     minHeight: 90,
     textAlignVertical: 'top',
-  },
-  preview: {
-    backgroundColor: palette.surface,
-    borderColor: palette.border,
-    borderRadius: 8,
-    borderWidth: 1,
-    gap: 6,
-    padding: 14,
-  },
-  previewTitle: {
-    color: palette.ink,
-    fontSize: 16,
-    fontWeight: '900',
-  },
-  previewText: {
-    color: palette.muted,
-    lineHeight: 20,
   },
 });

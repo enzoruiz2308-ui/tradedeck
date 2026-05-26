@@ -1,45 +1,38 @@
-import { apiClient, apiFallback } from '@/src/api/client';
-import { demoUser, initialCollectionIds, mockCards, mockListings } from '@/src/data/mockData';
-import { TradingCard, User } from '@/src/types';
+import { apiClient } from '@/src/api/client';
+import { CollectionItem, CollectionItemPayload, Listing, User } from '@/src/types';
 
 export const usersApi = {
   async getUser(id: string): Promise<User> {
-    return apiFallback(
-      async () => {
-        const { data } = await apiClient.get<User>(`/users/${id}`);
-        return data;
-      },
-      { ...demoUser, id },
-    );
+    const { data } = await apiClient.get<User>(`/users/${id}`);
+    return data;
   },
 
   async updateProfile(profile: Partial<User>): Promise<User> {
-    return apiFallback(
-      async () => {
-        const { data } = await apiClient.put<User>('/users/profile', profile);
-        return data;
-      },
-      { ...demoUser, ...profile },
-    );
+    const { data } = await apiClient.put<User>('/users/profile', profile);
+    return data;
   },
 
-  async getUserListings(userId: string) {
-    return apiFallback(
-      async () => {
-        const { data } = await apiClient.get(`/users/${userId}/listings`);
-        return data;
-      },
-      mockListings.filter((listing) => listing.seller.id === userId),
-    );
+  async getUserListings(userId: string): Promise<Listing[]> {
+    const { data } = await apiClient.get<Listing[]>(`/users/${userId}/listings`);
+    return data;
   },
 
-  async getCollection(userId: string): Promise<TradingCard[]> {
-    return apiFallback(
-      async () => {
-        const { data } = await apiClient.get<TradingCard[]>(`/users/${userId}/collection`);
-        return data;
-      },
-      mockCards.filter((card) => initialCollectionIds.includes(card.id)),
-    );
+  async getMyCollection(): Promise<CollectionItem[]> {
+    const { data } = await apiClient.get<CollectionItem[]>('/me/collection');
+    return data;
+  },
+
+  async addCollectionItem(payload: CollectionItemPayload): Promise<CollectionItem> {
+    const { data } = await apiClient.post<CollectionItem>('/me/collection', payload);
+    return data;
+  },
+
+  async updateCollectionItem(id: string, payload: Partial<CollectionItemPayload>): Promise<CollectionItem> {
+    const { data } = await apiClient.patch<CollectionItem>(`/me/collection/${id}`, payload);
+    return data;
+  },
+
+  async deleteCollectionItem(id: string): Promise<void> {
+    await apiClient.delete(`/me/collection/${id}`);
   },
 };

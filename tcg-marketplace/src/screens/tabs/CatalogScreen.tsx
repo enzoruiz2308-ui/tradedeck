@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
+import { useEffect } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { TradingCardTile } from '@/src/components/cards/TradingCardTile';
 import { SearchInput } from '@/src/components/forms/SearchInput';
@@ -12,10 +12,9 @@ import { StateView } from '@/src/components/ui/StateView';
 import { useCardsStore } from '@/src/store/cardsStore';
 import { useUserStore } from '@/src/store/userStore';
 import { palette } from '@/src/theme/tokens';
-import { CardRarity, TcgGame } from '@/src/types';
-import { filterCards } from '@/src/utils/filters';
+import { CardRarity, TcgSource } from '@/src/types';
 
-const games: { label: string; value: TcgGame | 'all' }[] = [
+const games: { label: string; value: TcgSource | 'all' }[] = [
   { label: 'Todos', value: 'all' },
   { label: 'Pokemon', value: 'pokemon' },
   { label: 'One Piece', value: 'onepiece' },
@@ -24,29 +23,19 @@ const games: { label: string; value: TcgGame | 'all' }[] = [
 const rarities: (CardRarity | 'all')[] = ['all', 'Common', 'Uncommon', 'Rare', 'Super Rare', 'Secret Rare'];
 
 export function CatalogScreen() {
-  const cards = useCardsStore((state) => state.cards);
-  const filters = useCardsStore((state) => state.filters);
-  const visibleCount = useCardsStore((state) => state.visibleCount);
-
-  const setQuery = useCardsStore((state) => state.setQuery);
-  const setFilters = useCardsStore((state) => state.setFilters);
-  const loadMore = useCardsStore((state) => state.loadMore);
-  const resetFilters = useCardsStore((state) => state.resetFilters);
-  const allFiltered = useMemo(() => {
-  return filterCards(cards, filters);
-  }, [cards, filters]);
-
-  const visibleCards = useMemo(() => {
-    return allFiltered.slice(0, visibleCount);
-  }, [allFiltered, visibleCount]);
+  const { cards, filters, page, total, totalPages, isLoading, isLoadingMore, error, loadCards, loadMore, setQuery, setFilters, resetFilters } =
+    useCardsStore();
   const collection = useUserStore((state) => state.collection);
-  const sets = useMemo(() => Array.from(new Set(allFiltered.map((card) => card.set))), [allFiltered]);
+
+  useEffect(() => {
+    void loadCards();
+  }, [filters.query, filters.tcg, filters.rarity, filters.set, filters.minPrice, filters.maxPrice, filters.sortBy, filters.sortOrder, loadCards]);
 
   return (
     <Screen>
       <View style={styles.header}>
         <Text style={styles.title}>Catalogo</Text>
-        <Text style={styles.subtitle}>Explora cartas, filtra por juego y guarda tus favoritas en coleccion.</Text>
+        <Text style={styles.subtitle}>Cartas normalizadas por el backend TradeDeck. El frontend no consulta APIs publicas TCG.</Text>
       </View>
 
       <SearchInput value={filters.query} onChangeText={setQuery} placeholder="Buscar por nombre, set o rareza" />
@@ -55,7 +44,7 @@ export function CatalogScreen() {
         <SectionHeader title="Juego" />
         <View style={styles.chipWrap}>
           {games.map((game) => (
-            <Chip key={game.value} label={game.label} active={filters.game === game.value} onPress={() => setFilters({ game: game.value })} />
+            <Chip key={game.value} label={game.label} active={filters.tcg === game.value} onPress={() => setFilters({ tcg: game.value })} />
           ))}
         </View>
       </View>
@@ -72,33 +61,32 @@ export function CatalogScreen() {
       <View style={styles.filterBlock}>
         <SectionHeader title="Orden" />
         <View style={styles.chipWrap}>
-          <Chip label="Nombre" active={filters.sortBy === 'name'} onPress={() => setFilters({ sortBy: 'name' })} />
-          <Chip label="Precio +" active={filters.sortBy === 'priceAsc'} onPress={() => setFilters({ sortBy: 'priceAsc' })} />
-          <Chip label="Precio -" active={filters.sortBy === 'priceDesc'} onPress={() => setFilters({ sortBy: 'priceDesc' })} />
-          <Chip label="Rareza" active={filters.sortBy === 'rarity'} onPress={() => setFilters({ sortBy: 'rarity' })} />
+          <Chip label="Nombre" active={filters.sortBy === 'name'} onPress={() => setFilters({ sortBy: 'name', sortOrder: 'asc' })} />
+          <Chip label="Precio +" active={filters.sortBy === 'price' && filters.sortOrder === 'asc'} onPress={() => setFilters({ sortBy: 'price', sortOrder: 'asc' })} />
+          <Chip label="Precio -" active={filters.sortBy === 'price' && filters.sortOrder === 'desc'} onPress={() => setFilters({ sortBy: 'price', sortOrder: 'desc' })} />
+          <Chip label="Rareza" active={filters.sortBy === 'rarity'} onPress={() => setFilters({ sortBy: 'rarity', sortOrder: 'desc' })} />
         </View>
       </View>
 
-      <SectionHeader title="Resultados" action={`${allFiltered.length} cartas`} />
-      {visibleCards.length ? (
+      <SectionHeader title="Resultados" action={`${total} cartas`} />
+      {isLoading && !cards.length ? <StateView title="Cargando catalogo" loading /> : null}
+      {error ? <StateView title="No se ha podido cargar el catalogo" description={error} action="Reintentar" onAction={loadCards} /> : null}
+      {!isLoading && !error && cards.length ? (
         <View style={styles.grid}>
-          {visibleCards.map((card) => (
+          {cards.map((card) => (
             <TradingCardTile
               key={card.id}
               card={card}
-              owned={collection.some((item) => item.id === card.id)}
-              onPress={() => {
-                router.push(`/card-details?id=${card.id}`);
-              }}
+              owned={collection.some((item) => item.cardId === card.id)}
+              onPress={() => router.push(`/card-details?id=${card.id}`)}
             />
           ))}
         </View>
-      ) : (
-        <StateView title="No hay cartas" description="Ajusta filtros o borra la busqueda." action="Limpiar filtros" onAction={resetFilters} />
-      )}
-
-      {visibleCount < allFiltered.length ? <Button title="Cargar más" variant="ghost" onPress={loadMore} /> : null}
-      {sets.length ? <Text style={styles.sets}>Sets visibles: {sets.join(', ')}</Text> : null}
+      ) : null}
+      {!isLoading && !error && !cards.length ? (
+        <StateView title="No hay cartas" description="Ajusta filtros o espera a que el backend sincronice cartas." action="Limpiar filtros" onAction={resetFilters} />
+      ) : null}
+      {page < totalPages ? <Button title={isLoadingMore ? 'Cargando...' : 'Cargar mas'} variant="ghost" disabled={isLoadingMore} onPress={loadMore} /> : null}
     </Screen>
   );
 }
@@ -129,10 +117,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
-  },
-  sets: {
-    color: palette.muted,
-    fontSize: 12,
-    lineHeight: 18,
   },
 });

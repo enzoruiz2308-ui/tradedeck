@@ -1,5 +1,6 @@
 import { Image } from 'expo-image';
 import { Link, router } from 'expo-router';
+import { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { ListingCard } from '@/src/components/cards/ListingCard';
@@ -15,17 +16,24 @@ import { formatPrice } from '@/src/utils/filters';
 
 export function ProfileScreen() {
   const { user, isAuthenticated, demoLogin, logout } = useAuthStore();
-  const { listings, favorites, toggleFavorite } = useListingsStore();
-  const { collection } = useUserStore();
-  const activeListings = user ? listings.filter((listing) => listing.seller.id === user.id) : [];
-  const collectionValue = collection.reduce((sum, card) => sum + (card.marketPrice ?? 0), 0);
+  const { listings, error: listingsError, loadListings, setFilters } = useListingsStore();
+  const { collection, loadCollection } = useUserStore();
+  const activeListings = user ? listings.filter((listing) => listing.sellerId === user.id) : [];
+  const collectionValue = collection.reduce((sum, item) => sum + (item.card?.marketPrice ?? 0) * item.quantity, 0);
+
+  useEffect(() => {
+    if (!user) return;
+    setFilters({ status: 'all' });
+    void loadListings();
+    void loadCollection();
+  }, [loadCollection, loadListings, setFilters, user]);
 
   if (!isAuthenticated || !user) {
     return (
       <Screen contentContainerStyle={styles.center}>
         <StateView
-          title="Perfil demo disponible"
-          description="Entra con la sesion demo para ver perfil, coleccion, anuncios y logout seguro."
+          title="Inicia sesion"
+          description="El perfil, tus anuncios y tu coleccion requieren una sesion autenticada en el backend TradeDeck."
           action="Entrar en demo"
           onAction={demoLogin}
         />
@@ -39,10 +47,10 @@ export function ProfileScreen() {
   return (
     <Screen>
       <View style={styles.header}>
-        <Image source={{ uri: user.avatar }} style={styles.avatar} contentFit="cover" />
+        {user.avatar ? <Image source={{ uri: user.avatar }} style={styles.avatar} contentFit="cover" /> : <View style={styles.avatar} />}
         <View style={styles.profileText}>
           <Text style={styles.username}>{user.username}</Text>
-          <Text style={styles.bio}>{user.bio}</Text>
+          <Text style={styles.bio}>{user.bio ?? 'Sin bio todavia.'}</Text>
           <Text style={styles.rating}>Rating {user.rating?.toFixed(1) ?? 'Nuevo'} / 5</Text>
         </View>
       </View>
@@ -54,7 +62,7 @@ export function ProfileScreen() {
         </View>
         <View style={styles.stat}>
           <Text style={styles.statValue}>{collection.length}</Text>
-          <Text style={styles.statLabel}>Cartas</Text>
+          <Text style={styles.statLabel}>Items</Text>
         </View>
         <View style={styles.stat}>
           <Text style={styles.statValue}>{formatPrice(collectionValue)}</Text>
@@ -64,28 +72,16 @@ export function ProfileScreen() {
 
       <View style={styles.actions}>
         <Button title="Editar perfil" variant="ghost" onPress={() => router.push('/edit-profile')} />
-        <Button title="Chat preparado" variant="ghost" onPress={() => router.push('/chat')} />
+        <Button title="Editar coleccion" variant="ghost" onPress={() => router.push('/edit-collection')} />
       </View>
 
-      <SectionHeader title="Anuncios activos" />
+      <SectionHeader title="Tus anuncios" />
+      {listingsError ? <StateView title="No se han podido leer tus anuncios" description={listingsError} /> : null}
       {activeListings.length ? (
-        activeListings.map((listing) => (
-          <ListingCard
-            key={listing.id}
-            listing={listing}
-            favorite={favorites.includes(listing.id)}
-            onPress={() => router.push(`/listing-details?id=${listing.id}`)}
-            onFavorite={() => toggleFavorite(listing.id)}
-          />
-        ))
+        activeListings.map((listing) => <ListingCard key={listing.id} listing={listing} onPress={() => router.push(`/listing-details?id=${listing.id}`)} />)
       ) : (
         <StateView title="Sin anuncios propios" description="Publica una venta o busqueda desde la pestana central." />
       )}
-
-      <SectionHeader title="Historial" />
-      <View style={styles.history}>
-        <Text style={styles.historyText}>Ultima actividad: coleccion actualizada y favoritos sincronizados localmente.</Text>
-      </View>
 
       <Button title="Cerrar sesion" variant="danger" onPress={logout} />
     </Screen>
@@ -153,17 +149,6 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: 'row',
     gap: 10,
-  },
-  history: {
-    backgroundColor: palette.surface,
-    borderColor: palette.border,
-    borderRadius: 8,
-    borderWidth: 1,
-    padding: 14,
-  },
-  historyText: {
-    color: palette.muted,
-    lineHeight: 20,
   },
   link: {
     color: palette.pokemonBlue,

@@ -1,43 +1,101 @@
 import { create } from 'zustand';
 
 import { cardsApi } from '@/src/api/cardsApi';
-import { mockCards } from '@/src/data/mockData';
-import { CardFilters, TradingCard } from '@/src/types';
-import { filterCards } from '@/src/utils/filters';
+import { normalizeApiError } from '@/src/api/client';
+import { CardFilters, CardQueryParams, TradingCard } from '@/src/types';
 
 interface CardsState {
   cards: TradingCard[];
   filters: CardFilters;
-  visibleCount: number;
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
   isLoading: boolean;
+  isLoadingMore: boolean;
+  error: string | null;
   loadCards: () => Promise<void>;
+  loadMore: () => Promise<void>;
   setQuery: (query: string) => void;
   setFilters: (filters: Partial<CardFilters>) => void;
-  loadMore: () => void;
   resetFilters: () => void;
 }
 
 const defaultFilters: CardFilters = {
   query: '',
-  game: 'all',
+  tcg: 'all',
   rarity: 'all',
   sortBy: 'name',
+  sortOrder: 'asc',
 };
 
+function buildParams(filters: CardFilters, page: number, limit: number): CardQueryParams {
+  return {
+    page,
+    limit,
+    query: filters.query || undefined,
+    tcg: filters.tcg === 'all' ? undefined : filters.tcg,
+    rarity: filters.rarity === 'all' ? undefined : filters.rarity,
+    set: filters.set || undefined,
+    minPrice: filters.minPrice,
+    maxPrice: filters.maxPrice,
+    sortBy: filters.sortBy,
+    sortOrder: filters.sortOrder,
+  };
+}
+
 export const useCardsStore = create<CardsState>((set, get) => ({
-  cards: mockCards,
+  cards: [],
   filters: defaultFilters,
-  visibleCount: 6,
+  page: 1,
+  limit: 20,
+  total: 0,
+  totalPages: 1,
   isLoading: false,
+  isLoadingMore: false,
+  error: null,
 
   loadCards: async () => {
-    set({ isLoading: true });
-    const cards = await cardsApi.getCards(get().filters);
-    set({ cards, isLoading: false });
+    set({ isLoading: true, error: null, page: 1 });
+    try {
+      const { filters, limit } = get();
+      const response = await cardsApi.getCards(buildParams(filters, 1, limit));
+      set({
+        cards: response.data,
+        page: response.page,
+        limit: response.limit,
+        total: response.total,
+        totalPages: response.totalPages,
+        isLoading: false,
+      });
+    } catch (error) {
+      set({ error: normalizeApiError(error).message, isLoading: false });
+    }
   },
 
-  setQuery: (query) => set((state) => ({ filters: { ...state.filters, query }, visibleCount: 6 })),
-  setFilters: (filters) => set((state) => ({ filters: { ...state.filters, ...filters }, visibleCount: 6 })),
-  loadMore: () => set((state) => ({ visibleCount: Math.min(state.visibleCount + 4, filterCards(state.cards, state.filters).length) })),
-  resetFilters: () => set({ filters: defaultFilters, visibleCount: 6 }),
+  loadMore: async () => {
+    const { page, totalPages, isLoadingMore, filters, limit, cards } = get();
+    if (isLoadingMore || page >= totalPages) return;
+
+    const nextPage = page + 1;
+    set({ isLoadingMore: true, error: null });
+    try {
+      const response = await cardsApi.getCards(buildParams(filters, nextPage, limit));
+      const existingIds = new Set(cards.map((card) => card.id));
+      set({
+        cards: [...cards, ...response.data.filter((card) => !existingIds.has(card.id))],
+        page: response.page,
+        limit: response.limit,
+        total: response.total,
+        totalPages: response.totalPages,
+        isLoadingMore: false,
+      });
+    } catch (error) {
+      set({ error: normalizeApiError(error).message, isLoadingMore: false });
+    }
+  },
+
+  setQuery: (query) => set((state) => ({ filters: { ...state.filters, query }, page: 1 })),
+  setFilters: (filters) => set((state) => ({ filters: { ...state.filters, ...filters }, page: 1 })),
+  resetFilters: () => set({ filters: defaultFilters, page: 1 }),
 }));

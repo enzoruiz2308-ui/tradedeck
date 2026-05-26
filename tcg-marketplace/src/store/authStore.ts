@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 
+import { normalizeApiError } from '@/src/api/client';
 import { authApi } from '@/src/api/authApi';
 import { LoginPayload, RegisterPayload, User } from '@/src/types';
 
@@ -7,6 +8,7 @@ interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  hasHydrated: boolean;
   error: string | null;
   hydrate: () => Promise<void>;
   login: (payload: LoginPayload) => Promise<void>;
@@ -20,15 +22,16 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isAuthenticated: false,
   isLoading: false,
+  hasHydrated: false,
   error: null,
 
   hydrate: async () => {
     set({ isLoading: true, error: null });
     try {
       const user = await authApi.me();
-      set({ user, isAuthenticated: Boolean(user), isLoading: false });
-    } catch {
-      set({ user: null, isAuthenticated: false, isLoading: false });
+      set({ user, isAuthenticated: Boolean(user), isLoading: false, hasHydrated: true });
+    } catch (error) {
+      set({ user: null, isAuthenticated: false, isLoading: false, hasHydrated: true, error: normalizeApiError(error).message });
     }
   },
 
@@ -37,8 +40,9 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const response = await authApi.login(payload);
       set({ user: response.user, isAuthenticated: true, isLoading: false });
-    } catch {
-      set({ error: 'No se ha podido iniciar sesion.', isLoading: false });
+    } catch (error) {
+      set({ error: normalizeApiError(error).message, isLoading: false });
+      throw error;
     }
   },
 
@@ -47,8 +51,9 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const response = await authApi.register(payload);
       set({ user: response.user, isAuthenticated: true, isLoading: false });
-    } catch {
-      set({ error: 'No se ha podido crear la cuenta.', isLoading: false });
+    } catch (error) {
+      set({ error: normalizeApiError(error).message, isLoading: false });
+      throw error;
     }
   },
 
@@ -60,7 +65,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   logout: async () => {
     await authApi.logout();
-    set({ user: null, isAuthenticated: false, error: null });
+    set({ user: null, isAuthenticated: false, error: null, hasHydrated: true });
   },
 
   updateUser: (user) => set({ user }),

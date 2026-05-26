@@ -1,5 +1,5 @@
-import { PlaceholderScreen } from '@/src/screens/secondary/PlaceholderScreen';
+import { EditProfileScreen } from '@/src/screens/secondary/EditProfileScreen';
 
 export default function EditProfileRoute() {
-  return <PlaceholderScreen title="Editar perfil" description="Ruta preparada para avatar, bio y preferencias cuando se conecte el backend de usuarios." />;
+  return <EditProfileScreen />;
 }

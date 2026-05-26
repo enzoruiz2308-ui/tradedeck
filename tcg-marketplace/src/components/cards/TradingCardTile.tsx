@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { palette, shadows } from '@/src/theme/tokens';
 import { TradingCard } from '@/src/types';
-import { formatPrice } from '@/src/utils/filters';
+import { formatPrice, getCardTcg } from '@/src/utils/filters';
 
 interface TradingCardTileProps {
   card: TradingCard;
@@ -13,6 +13,8 @@ interface TradingCardTileProps {
 }
 
 export function TradingCardTile({ card, owned, selected, onPress }: TradingCardTileProps) {
+  const tcg = getCardTcg(card);
+
   return (
     <Pressable accessibilityRole="button" onPress={onPress} style={[styles.card, selected && styles.selected]}>
       <Image source={{ uri: card.image }} style={styles.image} contentFit="contain" transition={180} cachePolicy="memory-disk" />
@@ -24,8 +26,8 @@ export function TradingCardTile({ card, owned, selected, onPress }: TradingCardT
           {card.set}
         </Text>
         <View style={styles.row}>
-          <Text style={[styles.badge, card.game === 'pokemon' ? styles.pokemon : styles.onePiece]}>
-            {card.game === 'pokemon' ? 'Pokemon' : 'One Piece'}
+          <Text style={[styles.badge, tcg === 'pokemon' ? styles.pokemon : styles.onePiece]}>
+            {tcg === 'pokemon' ? 'Pokemon' : 'One Piece'}
           </Text>
           <Text style={styles.price}>{formatPrice(card.marketPrice)}</Text>
         </View>

@@ -4,8 +4,8 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { IconButton } from '@/src/components/ui/IconButton';
 import { palette, shadows } from '@/src/theme/tokens';
-import { Listing } from '@/src/types';
-import { formatPrice, relativeDate } from '@/src/utils/filters';
+import { Listing, ListingStatus } from '@/src/types';
+import { formatPrice, getCardTitle, relativeDate } from '@/src/utils/filters';
 
 interface ListingCardProps {
   listing: Listing;
@@ -15,29 +15,42 @@ interface ListingCardProps {
   onFavorite?: () => void;
 }
 
+const statusLabels: Record<ListingStatus, string> = {
+  active: 'Activo',
+  reserved: 'Reservado',
+  sold: 'Vendido',
+  paused: 'Pausado',
+  expired: 'Caducado',
+};
+
 export function ListingCard({ listing, favorite, compact, onPress, onFavorite }: ListingCardProps) {
+  const cardImage = listing.card?.image;
+  const sellerName = listing.seller?.username ?? 'Usuario TradeDeck';
+  const grading = listing.grading.company === 'raw' ? 'Raw' : `${listing.grading.company} ${listing.grading.grade ?? ''}`.trim();
+
   return (
     <Pressable accessibilityRole="button" onPress={onPress} style={[styles.card, compact && styles.compact]}>
-      <Image source={{ uri: listing.images[0] ?? listing.card.image }} style={styles.image} contentFit="contain" cachePolicy="memory-disk" />
+      {cardImage ? <Image source={{ uri: cardImage }} style={styles.image} contentFit="contain" cachePolicy="memory-disk" /> : <View style={styles.image} />}
       <View style={styles.body}>
         <View style={styles.topRow}>
           <Text style={[styles.type, listing.type === 'sell' ? styles.sell : styles.buy]}>{listing.type === 'sell' ? 'Venta' : 'Busca'}</Text>
           <Text style={styles.date}>{relativeDate(listing.createdAt)}</Text>
         </View>
         <Text numberOfLines={1} style={styles.title}>
-          {listing.title}
+          {getCardTitle(listing.card)}
         </Text>
         <Text numberOfLines={1} style={styles.detail}>
-          {listing.card.name} · {listing.condition}
+          {listing.condition} · {grading}
         </Text>
+        <Text style={[styles.status, styles[listing.status]]}>{statusLabels[listing.status]}</Text>
         <View style={styles.bottomRow}>
           <View>
             <Text style={styles.price}>{formatPrice(listing.price)}</Text>
             <Text style={styles.seller}>
-              <Ionicons name="star" size={11} color={palette.warning} /> {listing.seller.username}
+              <Ionicons name="star" size={11} color={palette.warning} /> {sellerName}
             </Text>
           </View>
-          <IconButton name={favorite ? 'heart' : 'heart-outline'} label="Favorito" active={favorite} onPress={onFavorite} />
+          {onFavorite ? <IconButton name={favorite ? 'heart' : 'heart-outline'} label="Favorito" active={favorite} onPress={onFavorite} /> : null}
         </View>
       </View>
     </Pressable>
@@ -102,6 +115,35 @@ const styles = StyleSheet.create({
   detail: {
     color: palette.muted,
     fontSize: 13,
+  },
+  status: {
+    alignSelf: 'flex-start',
+    borderRadius: 999,
+    fontSize: 11,
+    fontWeight: '900',
+    overflow: 'hidden',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  active: {
+    backgroundColor: '#dcfce7',
+    color: palette.success,
+  },
+  reserved: {
+    backgroundColor: '#fef3c7',
+    color: palette.warning,
+  },
+  sold: {
+    backgroundColor: '#e2e8f0',
+    color: palette.muted,
+  },
+  paused: {
+    backgroundColor: '#dbeafe',
+    color: palette.pokemonBlue,
+  },
+  expired: {
+    backgroundColor: '#ffe4e8',
+    color: palette.onePiece,
   },
   bottomRow: {
     alignItems: 'center',

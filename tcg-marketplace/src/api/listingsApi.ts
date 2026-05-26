@@ -1,44 +1,28 @@
-import { apiClient, apiFallback } from '@/src/api/client';
-import { mockListings } from '@/src/data/mockData';
-import { Listing, ListingFormValues, TradingCard, User } from '@/src/types';
+import { apiClient } from '@/src/api/client';
+import { Listing, ListingFormValues, ListingQueryParams, ListingStatus, PaginatedResponse } from '@/src/types';
 
 export const listingsApi = {
-  async getListings(): Promise<Listing[]> {
-    return apiFallback(
-      async () => {
-        const { data } = await apiClient.get<Listing[]>('/listings');
-        return data;
-      },
-      mockListings,
-    );
+  async getListings(params?: ListingQueryParams): Promise<PaginatedResponse<Listing>> {
+    const { data } = await apiClient.get<PaginatedResponse<Listing>>('/listings', { params });
+    return data;
   },
 
-  async getListing(id: string): Promise<Listing | undefined> {
-    return apiFallback(
-      async () => {
-        const { data } = await apiClient.get<Listing>(`/listings/${id}`);
-        return data;
-      },
-      mockListings.find((listing) => listing.id === id),
-    );
+  async getListing(id: string): Promise<Listing> {
+    const { data } = await apiClient.get<Listing>(`/listings/${id}`);
+    return data;
   },
 
-  async createListing(values: ListingFormValues, card: TradingCard, seller: User): Promise<Listing> {
-    const fallback: Listing = {
-      id: `lst-${Date.now()}`,
-      ...values,
-      card,
-      seller,
-      images: [card.image],
-      createdAt: new Date().toISOString(),
-    };
+  async createListing(values: ListingFormValues): Promise<Listing> {
+    const { data } = await apiClient.post<Listing>('/listings', values);
+    return data;
+  },
 
-    return apiFallback(
-      async () => {
-        const { data } = await apiClient.post<Listing>('/listings', values);
-        return data;
-      },
-      fallback,
-    );
+  async updateListing(id: string, values: Partial<ListingFormValues> & { status?: ListingStatus }): Promise<Listing> {
+    const { data } = await apiClient.put<Listing>(`/listings/${id}`, values);
+    return data;
+  },
+
+  async deleteListing(id: string): Promise<void> {
+    await apiClient.delete(`/listings/${id}`);
   },
 };

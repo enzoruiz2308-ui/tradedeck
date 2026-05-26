@@ -1,5 +1,6 @@
 import { AxiosError, create, InternalAxiosRequestConfig } from 'axios';
-import * as SecureStore from 'expo-secure-store';
+
+import { sessionStorage } from '@/src/services/sessionStorage';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -13,8 +14,56 @@ export const apiClient = create({
   },
 });
 
+export class ApiError extends Error {
+  status?: number;
+
+  constructor(message: string, status?: number) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+  }
+}
+
+function getServerMessage(error: AxiosError) {
+  const data = error.response?.data;
+  if (data && typeof data === 'object') {
+    const message = 'message' in data ? data.message : 'error' in data ? data.error : undefined;
+    if (typeof message === 'string') {
+      return message;
+    }
+  }
+
+  return undefined;
+}
+
+export function ensureApiUrl() {
+  if (!API_URL) {
+    throw new ApiError('Backend no configurado. Define EXPO_PUBLIC_API_URL para conectar TradeDeck.', 0);
+  }
+}
+
+export function normalizeApiError(error: unknown) {
+  if (error instanceof ApiError) {
+    return error;
+  }
+
+  if (error instanceof AxiosError) {
+    return new ApiError(
+      getServerMessage(error) ?? 'No se ha podido completar la peticion con el backend.',
+      error.response?.status,
+    );
+  }
+
+  if (error instanceof Error) {
+    return new ApiError(error.message);
+  }
+
+  return new ApiError('Error inesperado al comunicar con el backend.');
+}
+
 apiClient.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
-  const token = await SecureStore.getItemAsync('tradedeck.accessToken');
+  ensureApiUrl();
+  const token = await sessionStorage.getItem('tradedeck.accessToken');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -29,19 +78,19 @@ apiClient.interceptors.response.use(
 
     if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
       originalRequest._retry = true;
-      const refreshToken = await SecureStore.getItemAsync('tradedeck.refreshToken');
+      const refreshToken = await sessionStorage.getItem('tradedeck.refreshToken');
 
       if (refreshToken && API_URL) {
         try {
           const { data } = await create({ timeout: 10000 }).post(`${API_URL}/auth/refresh`, { refreshToken });
-          await SecureStore.setItemAsync('tradedeck.accessToken', data.accessToken);
-          await SecureStore.setItemAsync('tradedeck.refreshToken', data.refreshToken ?? refreshToken);
+          await sessionStorage.setItem('tradedeck.accessToken', data.accessToken);
+          await sessionStorage.setItem('tradedeck.refreshToken', data.refreshToken ?? refreshToken);
           originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
 
           return apiClient(originalRequest);
         } catch {
-          await SecureStore.deleteItemAsync('tradedeck.accessToken');
-          await SecureStore.deleteItemAsync('tradedeck.refreshToken');
+          await sessionStorage.deleteItem('tradedeck.accessToken');
+          await sessionStorage.deleteItem('tradedeck.refreshToken');
         }
       }
     }
@@ -49,15 +98,3 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   },
 );
-
-export async function apiFallback<T>(request: () => Promise<T>, fallback: T): Promise<T> {
-  if (!hasApiUrl) {
-    return fallback;
-  }
-
-  try {
-    return await request();
-  } catch {
-    return fallback;
-  }
-}

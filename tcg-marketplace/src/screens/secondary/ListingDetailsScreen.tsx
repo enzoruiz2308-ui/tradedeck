@@ -1,38 +1,75 @@
-import { useLocalSearchParams } from 'expo-router';
-import { StyleSheet, Text, View } from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 
 import { ListingCard } from '@/src/components/cards/ListingCard';
 import { TradingCardTile } from '@/src/components/cards/TradingCardTile';
 import { Screen } from '@/src/components/layout/Screen';
+import { SectionHeader } from '@/src/components/layout/SectionHeader';
 import { Button } from '@/src/components/ui/Button';
+import { Chip } from '@/src/components/ui/Chip';
 import { StateView } from '@/src/components/ui/StateView';
+import { useAuthStore } from '@/src/store/authStore';
 import { useListingsStore } from '@/src/store/listingsStore';
 import { palette } from '@/src/theme/tokens';
+import { ListingStatus } from '@/src/types';
+
+const ownerStatuses: ListingStatus[] = ['active', 'reserved', 'sold', 'paused', 'expired'];
 
 export function ListingDetailsScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
-  const { listings, favorites, toggleFavorite } = useListingsStore();
+  const user = useAuthStore((state) => state.user);
+  const { listings, isMutating, error, updateListingStatus, deleteListing } = useListingsStore();
   const listing = listings.find((item) => item.id === id);
 
   if (!listing) {
     return (
       <Screen>
-        <StateView title="Anuncio no encontrado" description="Puede que el anuncio ya no este disponible." />
+        <StateView title="Anuncio no encontrado" description="Carga el anuncio desde el feed para ver sus detalles." />
       </Screen>
     );
   }
 
+  const isOwner = Boolean(user && listing.sellerId === user.id);
+
+  const confirmDelete = () => {
+    Alert.alert('Eliminar anuncio', 'Esta accion eliminara el anuncio del backend.', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Eliminar',
+        style: 'destructive',
+        onPress: async () => {
+          await deleteListing(listing.id);
+          router.back();
+        },
+      },
+    ]);
+  };
+
   return (
     <Screen>
-      <ListingCard listing={listing} favorite={favorites.includes(listing.id)} onFavorite={() => toggleFavorite(listing.id)} />
-      <TradingCardTile card={listing.card} />
+      <ListingCard listing={listing} />
+      {listing.card ? <TradingCardTile card={listing.card} /> : <StateView title={listing.cardId} description="Carta pendiente de resolver por backend." />}
       <View style={styles.panel}>
-        <Text style={styles.title}>Descripcion</Text>
-        <Text style={styles.text}>{listing.description}</Text>
-        <Text style={styles.text}>Vendedor: {listing.seller.username}</Text>
-        <Text style={styles.text}>Estado: {listing.condition}</Text>
+        <Text style={styles.title}>Detalles</Text>
+        <Text style={styles.text}>{listing.description || 'Sin descripcion.'}</Text>
+        <Text style={styles.text}>Vendedor: {listing.seller?.username ?? listing.sellerId}</Text>
+        <Text style={styles.text}>Estado carta: {listing.condition}</Text>
+        <Text style={styles.text}>Status anuncio: {listing.status}</Text>
+        <Text style={styles.text}>Grading: {listing.grading.company === 'raw' ? 'Raw' : `${listing.grading.company} ${listing.grading.grade ?? ''}`}</Text>
       </View>
-      <Button title="Abrir chat preparado" variant="secondary" />
+
+      {isOwner ? (
+        <View style={styles.ownerPanel}>
+          <SectionHeader title="Acciones de propietario" />
+          <View style={styles.chips}>
+            {ownerStatuses.map((status) => (
+              <Chip key={status} label={status} active={listing.status === status} onPress={() => void updateListingStatus(listing.id, status)} />
+            ))}
+          </View>
+          {error ? <Text style={styles.error}>{error}</Text> : null}
+          <Button title={isMutating ? 'Aplicando...' : 'Eliminar anuncio'} variant="danger" disabled={isMutating} onPress={confirmDelete} />
+        </View>
+      ) : null}
     </Screen>
   );
 }
@@ -46,6 +83,19 @@ const styles = StyleSheet.create({
     gap: 8,
     padding: 14,
   },
+  ownerPanel: {
+    backgroundColor: palette.surface,
+    borderColor: palette.border,
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 12,
+    padding: 14,
+  },
+  chips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
   title: {
     color: palette.ink,
     fontSize: 20,
@@ -54,5 +104,9 @@ const styles = StyleSheet.create({
   text: {
     color: palette.muted,
     lineHeight: 20,
+  },
+  error: {
+    color: palette.onePiece,
+    fontWeight: '800',
   },
 });

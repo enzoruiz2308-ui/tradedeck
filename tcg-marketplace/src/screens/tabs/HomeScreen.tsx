@@ -1,34 +1,24 @@
-import { useEffect, useMemo, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
+import { useEffect } from 'react';
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { ListingCard } from '@/src/components/cards/ListingCard';
 import { SearchInput } from '@/src/components/forms/SearchInput';
 import { Screen } from '@/src/components/layout/Screen';
 import { SectionHeader } from '@/src/components/layout/SectionHeader';
+import { Button } from '@/src/components/ui/Button';
 import { Chip } from '@/src/components/ui/Chip';
 import { StateView } from '@/src/components/ui/StateView';
 import { useListingsStore } from '@/src/store/listingsStore';
 import { palette } from '@/src/theme/tokens';
-import { searchListings } from '@/src/utils/filters';
 
 export function HomeScreen() {
-  const { listings, favorites, isLoading, loadListings, refresh, toggleFavorite } = useListingsStore();
-  const [query, setQuery] = useState('');
-  const [selectedGame, setSelectedGame] = useState<'all' | 'pokemon' | 'onepiece'>('all');
-  const filtered = useMemo(() => {
-    let result = searchListings(listings, query);
-    if (selectedGame !== 'all') {
-      result = result.filter(
-        (listing) => listing.card.game?.toLowerCase() === selectedGame
-      );
-    }
-    return result;
-  }, [listings, query, selectedGame]);
+  const { listings, favorites, filters, total, page, totalPages, isLoading, isLoadingMore, error, loadListings, loadMore, refresh, setFilters, toggleFavorite } =
+    useListingsStore();
 
   useEffect(() => {
     void loadListings();
-  }, [loadListings]);
+  }, [filters.query, filters.tcg, filters.status, filters.type, loadListings]);
 
   return (
     <Screen
@@ -39,21 +29,24 @@ export function HomeScreen() {
           <Text style={styles.kicker}>TCG marketplace</Text>
           <Text style={styles.title}>TradeDeck</Text>
         </View>
-        <Text style={styles.heroCopy}>Compra, vende y organiza cartas Pokemon y One Piece con una experiencia rapida.</Text>
+        <Text style={styles.heroCopy}>Frontend preparado para consumir el backend TradeDeck con anuncios paginados y ownership checks.</Text>
       </View>
 
-      <SearchInput value={query} onChangeText={setQuery} />
+      <SearchInput value={filters.query ?? ''} onChangeText={(query) => setFilters({ query })} />
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
-        <Chip label="Todos" active={selectedGame === 'all'} onPress={() => setSelectedGame('all')} />
-        <Chip label="Pokemon" active={selectedGame === 'pokemon'} onPress={() => setSelectedGame('pokemon')} />
-        <Chip label="One Piece" active={selectedGame === 'onepiece'} onPress={() => setSelectedGame('onepiece')} />
+        <Chip label="Todos" active={filters.tcg === 'all'} onPress={() => setFilters({ tcg: 'all' })} />
+        <Chip label="Pokemon" active={filters.tcg === 'pokemon'} onPress={() => setFilters({ tcg: 'pokemon' })} />
+        <Chip label="One Piece" active={filters.tcg === 'onepiece'} onPress={() => setFilters({ tcg: 'onepiece' })} />
+        <Chip label="Activos" active={filters.status === 'active'} onPress={() => setFilters({ status: filters.status === 'active' ? 'all' : 'active' })} />
       </ScrollView>
 
       <View style={styles.section}>
-        <SectionHeader title="Anuncios recientes" action={`${filtered.length} activos`} />
-        {filtered.length ? (
-          filtered.map((listing) => (
+        <SectionHeader title="Anuncios recientes" action={`${total} encontrados`} />
+        {isLoading && !listings.length ? <StateView title="Cargando anuncios" loading /> : null}
+        {error ? <StateView title="No se han podido cargar anuncios" description={error} action="Reintentar" onAction={loadListings} /> : null}
+        {!isLoading && !error && listings.length ? (
+          listings.map((listing) => (
             <ListingCard
               key={listing.id}
               listing={listing}
@@ -62,9 +55,11 @@ export function HomeScreen() {
               onFavorite={() => toggleFavorite(listing.id)}
             />
           ))
-        ) : (
-          <StateView title="Sin anuncios" description="Prueba con otra busqueda o publica el primer anuncio." />
-        )}
+        ) : null}
+        {!isLoading && !error && !listings.length ? (
+          <StateView title="Sin anuncios" description="Prueba otros filtros o vuelve cuando el backend tenga publicaciones." />
+        ) : null}
+        {page < totalPages ? <Button title={isLoadingMore ? 'Cargando...' : 'Cargar mas'} variant="ghost" disabled={isLoadingMore} onPress={loadMore} /> : null}
       </View>
     </Screen>
   );
@@ -101,9 +96,5 @@ const styles = StyleSheet.create({
   },
   section: {
     gap: 12,
-  },
-  carousel: {
-    gap: 12,
-    paddingRight: 18,
   },
 });

@@ -1,4 +1,4 @@
-import { CardFilters, Listing, TradingCard } from '@/src/types';
+import { CardFilters, Listing, TradingCard, TcgSource } from '@/src/types';
 
 const rarityRank = ['Common', 'Uncommon', 'Rare', 'Super Rare', 'Secret Rare'];
 
@@ -16,6 +16,14 @@ export function relativeDate(date: string) {
   return `Hace ${days} dias`;
 }
 
+export function getCardTcg(card?: TradingCard): TcgSource | undefined {
+  return card?.tcg ?? card?.game;
+}
+
+export function getCardTitle(card?: TradingCard, fallback = 'Carta pendiente') {
+  return card?.name ?? fallback;
+}
+
 export function filterCards(cards: TradingCard[], filters?: Partial<CardFilters>) {
   const query = filters?.query?.trim().toLowerCase() ?? '';
 
@@ -25,7 +33,7 @@ export function filterCards(cards: TradingCard[], filters?: Partial<CardFilters>
       card.name.toLowerCase().includes(query) ||
       card.set.toLowerCase().includes(query) ||
       card.rarity.toLowerCase().includes(query);
-    const matchesGame = !filters?.game || filters.game === 'all' || card.game === filters.game;
+    const matchesGame = !filters?.tcg || filters.tcg === 'all' || getCardTcg(card) === filters.tcg;
     const matchesRarity = !filters?.rarity || filters.rarity === 'all' || card.rarity === filters.rarity;
     const matchesSet = !filters?.set || card.set === filters.set;
     const matchesMin = !filters?.minPrice || (card.marketPrice ?? 0) >= filters.minPrice;
@@ -35,12 +43,14 @@ export function filterCards(cards: TradingCard[], filters?: Partial<CardFilters>
   });
 
   switch (filters?.sortBy) {
-    case 'priceAsc':
-      return filtered.sort((a, b) => (a.marketPrice ?? 0) - (b.marketPrice ?? 0));
-    case 'priceDesc':
-      return filtered.sort((a, b) => (b.marketPrice ?? 0) - (a.marketPrice ?? 0));
+    case 'price':
+      return filtered.sort((a, b) =>
+        filters?.sortOrder === 'desc' ? (b.marketPrice ?? 0) - (a.marketPrice ?? 0) : (a.marketPrice ?? 0) - (b.marketPrice ?? 0),
+      );
     case 'rarity':
       return filtered.sort((a, b) => rarityRank.indexOf(b.rarity) - rarityRank.indexOf(a.rarity));
+    case 'set':
+      return filtered.sort((a, b) => a.set.localeCompare(b.set));
     case 'name':
     default:
       return filtered.sort((a, b) => a.name.localeCompare(b.name));
@@ -53,9 +63,10 @@ export function searchListings(listings: Listing[], query: string) {
 
   return listings.filter(
     (listing) =>
-      listing.title.toLowerCase().includes(normalized) ||
-      listing.card.name.toLowerCase().includes(normalized) ||
-      listing.card.set.toLowerCase().includes(normalized) ||
-      listing.seller.username.toLowerCase().includes(normalized),
+      listing.description?.toLowerCase().includes(normalized) ||
+      listing.card?.name.toLowerCase().includes(normalized) ||
+      listing.card?.set.toLowerCase().includes(normalized) ||
+      listing.seller?.username.toLowerCase().includes(normalized) ||
+      listing.status.toLowerCase().includes(normalized),
   );
 }
