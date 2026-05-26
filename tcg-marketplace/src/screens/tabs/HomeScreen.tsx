@@ -15,8 +15,16 @@ import { searchListings } from '@/src/utils/filters';
 export function HomeScreen() {
   const { listings, favorites, isLoading, loadListings, refresh, toggleFavorite } = useListingsStore();
   const [query, setQuery] = useState('');
-  const filtered = useMemo(() => searchListings(listings, query), [listings, query]);
-  const featured = filtered.filter((listing) => listing.featured);
+  const [selectedGame, setSelectedGame] = useState<'all' | 'pokemon' | 'onepiece'>('all');
+  const filtered = useMemo(() => {
+    let result = searchListings(listings, query);
+    if (selectedGame !== 'all') {
+      result = result.filter(
+        (listing) => listing.card.game?.toLowerCase() === selectedGame
+      );
+    }
+    return result;
+  }, [listings, query, selectedGame]);
 
   useEffect(() => {
     void loadListings();
@@ -37,28 +45,10 @@ export function HomeScreen() {
       <SearchInput value={query} onChangeText={setQuery} />
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
-        <Chip label="Todos" active={!query} onPress={() => setQuery('')} />
-        <Chip label="Pokemon" onPress={() => setQuery('pokemon')} />
-        <Chip label="One Piece" onPress={() => setQuery('one piece')} />
+        <Chip label="Todos" active={selectedGame === 'all'} onPress={() => setSelectedGame('all')} />
+        <Chip label="Pokemon" active={selectedGame === 'pokemon'} onPress={() => setSelectedGame('pokemon')} />
+        <Chip label="One Piece" active={selectedGame === 'onepiece'} onPress={() => setSelectedGame('onepiece')} />
       </ScrollView>
-
-      {featured.length ? (
-        <View style={styles.section}>
-          <SectionHeader title="Destacados" />
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carousel}>
-            {featured.map((listing) => (
-              <ListingCard
-                key={listing.id}
-                compact
-                listing={listing}
-                favorite={favorites.includes(listing.id)}
-                onPress={() => router.push(`/listing-details?id=${listing.id}`)}
-                onFavorite={() => toggleFavorite(listing.id)}
-              />
-            ))}
-          </ScrollView>
-        </View>
-      ) : null}
 
       <View style={styles.section}>
         <SectionHeader title="Anuncios recientes" action={`${filtered.length} activos`} />

@@ -96,7 +96,6 @@ export const mockListings: Listing[] = [
     seller: demoUser,
     condition: 'Near Mint',
     images: [mockCards[0].image],
-    featured: true,
     createdAt: '2026-05-18T18:30:00.000Z',
   },
   {
@@ -114,7 +113,6 @@ export const mockListings: Listing[] = [
     },
     condition: 'Excellent',
     images: [mockCards[6].image],
-    featured: true,
     createdAt: '2026-05-17T11:10:00.000Z',
   },
   {
