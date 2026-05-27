@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_cors import CORS
 from flasgger import Swagger
 from config import Config, db, jwt
 from routes.usuario_routes import usuario_bp
@@ -13,6 +14,7 @@ def create_app():
     db.init_app(app)
     jwt.init_app(app)
     Swagger(app)
+    CORS(app)
 
     app.register_blueprint(usuario_bp)
     app.register_blueprint(anuncio_bp)
