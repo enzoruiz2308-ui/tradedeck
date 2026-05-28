@@ -1,0 +1,172 @@
+@startuml TradeDeck_Architecture
+ 
+skinparam backgroundColor #FAFAFA
+
+skinparam defaultFontName Arial
+
+skinparam defaultFontSize 13
+
+skinparam roundcorner 10
+
+skinparam shadowing false
+ 
+skinparam package {
+
+  BackgroundColor #F5F5F5
+
+  BorderColor #AAAAAA
+
+  FontStyle bold
+
+}
+ 
+skinparam component {
+
+  BackgroundColor #FFFFFF
+
+  BorderColor #888888
+
+}
+ 
+actor Usuario
+ 
+package "Frontend — React Native (Expo)" {
+
+  component [Login / Registro\nValidación de formulario] as Login
+
+  component [Home / Catálogo\nFeed + filtros] as Home
+
+  component [Anuncios\nCrear / ver detalles] as Anuncios
+
+  component [Mi perfil\nColección + anuncios] as Perfil
+ 
+  component [NativeWind] as NW
+
+  component [React Navigation] as RN
+
+  component [Axios] as Axios
+
+  component [Zustand / Context] as Zustand
+
+  component [JWT (cliente)] as JWTclient
+
+}
+ 
+package "Backend — Python Flask" {
+
+  component [Controller\nPeticiones HTTP] as Controller
+
+  component [Service\nLógica de negocio] as Service
+
+  component [Repository\nAcceso a BBDD] as Repository
+
+  component [Model\nEntidades] as Model
+
+  component [DTO\nI/O datos] as DTO
+ 
+  note right of Controller
+
+    POST /auth/register
+
+    POST /auth/login → JWT
+
+    GET  /cards
+
+    GET  /listings
+
+    POST /listings
+
+    PUT  /listings/{id}
+
+    DELETE /listings/{id}
+
+    GET  /users/me/collection
+
+    POST /users/me/collection
+
+    Swagger / OpenAPI docs
+
+  end note
+
+}
+ 
+package "Base de datos — PostgreSQL" {
+
+  database usuarios
+
+  database anuncios
+
+  database cartas_cache
+
+  database coleccion
+
+  database favoritos
+
+  database mensajes
+
+  component [Vistas + consultas\nJOIN / subconsultas] as Vistas
+
+}
+ 
+package "APIs externas" {
+
+  component [PokéAPI\nCartas Pokémon] as PokeAPI
+
+  component [TCG API\nSets y rarezas] as TCGAPI
+
+}
+ 
+package "SysAdmin & QA" {
+
+  node [Srv1: PostgreSQL\nUbuntu Server VMware] as Srv1
+
+  node [Srv2: Flask API\nUbuntu Server VMware] as Srv2
+
+  component [GitFlow\nmain + develop protegidos] as Git
+
+  component [Pytest / Postman / E2E] as Testing
+
+}
+ 
+' ── Relaciones ──
+
+Usuario --> Login : interactúa
+ 
+Login    --> Controller : HTTP REST + JWT
+
+Home     --> Controller
+
+Anuncios --> Controller
+
+Perfil   --> Controller
+ 
+Controller --> Service
+
+Service    --> Repository
+
+Repository --> Model
+
+Model      --> DTO
+ 
+Repository --> usuarios
+
+Repository --> anuncios
+
+Repository --> cartas_cache
+
+Repository --> coleccion
+
+Repository --> favoritos
+
+Repository --> mensajes
+ 
+Controller --> PokeAPI : GET cartas
+
+Controller --> TCGAPI  : GET sets
+ 
+Srv1 --> usuarios : aloja
+
+Srv2 --> Controller : aloja
+ 
+@enduml
+ 
