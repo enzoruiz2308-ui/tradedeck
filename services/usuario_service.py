@@ -24,6 +24,7 @@ class UsuarioService:
             nombre=datos["nombre"],
             email=datos["email"],
             password=password_encriptada.decode("utf-8")
+            login=datos["login"]
         )
         return dao.crear(usuario), None
 
