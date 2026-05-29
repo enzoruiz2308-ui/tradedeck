@@ -5,6 +5,23 @@ carta_bp = Blueprint("cartas", __name__)
 
 @carta_bp.route("/api/carta/pokemon/<nombre>", methods=["GET"])
 def carta_pokemon(nombre):
+    """
+    Obtener carta Pokémon por nombre
+    ---
+    tags:
+      - Cartas
+    parameters:
+      - in: path
+        name: nombre
+        type: string
+        required: true
+        example: pikachu
+    responses:
+      200:
+        description: Datos de la carta
+      404:
+        description: Pokémon no encontrado
+    """
     respuesta = requests.get(f"https://pokeapi.co/api/v2/pokemon/{nombre.lower()}")
     if respuesta.status_code != 200:
         return jsonify({"error": f"No se encontró el Pokémon: {nombre}"}), 404
@@ -20,6 +37,23 @@ def carta_pokemon(nombre):
 @carta_bp.route("/api/cartas/pokemon", methods=["GET"])
 @carta_bp.route("/api/cartas/pokemon/<int:cantidad>", methods=["GET"])
 def listar_pokemon(cantidad=20):
+    """
+    Listar cartas Pokémon
+    ---
+    tags:
+      - Cartas
+    parameters:
+      - in: path
+        name: cantidad
+        type: integer
+        required: false
+        example: 20
+    responses:
+      200:
+        description: Lista de cartas Pokémon
+      500:
+        description: Error conectando con PokéAPI
+    """
     respuesta = requests.get(f"https://pokeapi.co/api/v2/pokemon?limit={cantidad}")
     if respuesta.status_code != 200:
         return jsonify({"error": "No se pudo conectar con la PokéAPI"}), 500
