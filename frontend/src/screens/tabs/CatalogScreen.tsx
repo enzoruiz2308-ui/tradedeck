@@ -14,8 +14,7 @@ import { useUserStore } from '@/src/store/userStore';
 import { palette } from '@/src/theme/tokens';
 import { CardRarity, TcgSource } from '@/src/types';
 
-const games: { label: string; value: TcgSource | 'all' }[] = [
-  { label: 'Todos', value: 'all' },
+const games: { label: string; value: TcgSource }[] = [
   { label: 'Pokemon', value: 'pokemon' },
   { label: 'One Piece', value: 'onepiece' },
 ];
@@ -23,7 +22,7 @@ const games: { label: string; value: TcgSource | 'all' }[] = [
 const rarities: (CardRarity | 'all')[] = ['all', 'Common', 'Uncommon', 'Rare', 'Super Rare', 'Secret Rare'];
 
 export function CatalogScreen() {
-  const { cards, filters, page, total, totalPages, isLoading, isLoadingMore, error, loadCards, loadMore, setQuery, setFilters, resetFilters } =
+  const { cards, filters, page, total, totalPages, isLoading, isLoadingMore, error, loadCards, loadMore, loadPrevious, setQuery, setFilters, resetFilters } =
     useCardsStore();
   const collection = useUserStore((state) => state.collection);
 
@@ -86,7 +85,15 @@ export function CatalogScreen() {
       {!isLoading && !error && !cards.length ? (
         <StateView title="No hay cartas" description="Ajusta filtros o espera a que el backend sincronice cartas." action="Limpiar filtros" onAction={resetFilters} />
       ) : null}
-      {page < totalPages ? <Button title={isLoadingMore ? 'Cargando...' : 'Cargar mas'} variant="ghost" disabled={isLoadingMore} onPress={loadMore} /> : null}
+      {totalPages > 1 ? (
+        <View style={styles.pagination}>
+          <Button title="Anterior" variant="ghost" disabled={isLoadingMore || page <= 1} onPress={loadPrevious} />
+          <Text style={styles.pageText}>
+            Pagina {page} de {totalPages}
+          </Text>
+          <Button title={isLoadingMore ? 'Cargando...' : 'Siguiente'} variant="ghost" disabled={isLoadingMore || page >= totalPages} onPress={loadMore} />
+        </View>
+      ) : null}
     </Screen>
   );
 }
@@ -117,5 +124,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
+  },
+  pagination: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 10,
+    justifyContent: 'space-between',
+  },
+  pageText: {
+    color: palette.muted,
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '800',
+    textAlign: 'center',
   },
 });

@@ -14,8 +14,9 @@ import { StateView } from '@/src/components/ui/StateView';
 import { useAuthStore } from '@/src/store/authStore';
 import { useCardsStore } from '@/src/store/cardsStore';
 import { useListingsStore } from '@/src/store/listingsStore';
+import { useUserStore } from '@/src/store/userStore';
 import { palette } from '@/src/theme/tokens';
-import { CardCondition, GradingCompany } from '@/src/types';
+import { CardCondition, GradingCompany, TradingCard } from '@/src/types';
 import { getCardTcg } from '@/src/utils/filters';
 import { ListingForm, listingSchema } from '@/src/utils/validation';
 
@@ -26,6 +27,7 @@ export function CreateListingScreen() {
   const { isAuthenticated } = useAuthStore();
   const { cards, isLoading: isLoadingCards, error: cardsError, loadCards, loadMore, page, totalPages } = useCardsStore();
   const { createListing, isMutating, error } = useListingsStore();
+  const { collection, isLoading: isLoadingCollection, error: collectionError, loadCollection } = useUserStore();
   const { control, handleSubmit, watch, setValue, formState, reset } = useForm<ListingForm>({
     resolver: zodResolver(listingSchema),
     defaultValues: {
@@ -47,16 +49,36 @@ export function CreateListingScreen() {
     }
   }, [cards.length, loadCards]);
 
-  const selectedCard = cards.find((card) => card.id === watch('cardId'));
   const listingType = watch('type');
+  const selectedCardId = watch('cardId');
   const condition = watch('condition');
   const gradingCompany = watch('grading.company');
+  const ownedCards = collection.map((item) => item.card).filter((card): card is TradingCard => Boolean(card));
+  const availableCards = listingType === 'sell' ? ownedCards : cards;
+  const selectedCard = availableCards.find((card) => card.id === selectedCardId);
+
+  useEffect(() => {
+    if (isAuthenticated && !collection.length) {
+      void loadCollection();
+    }
+  }, [collection.length, isAuthenticated, loadCollection]);
+
+  useEffect(() => {
+    if (!selectedCardId) return;
+    if (!availableCards.some((card) => card.id === selectedCardId)) {
+      setValue('cardId', '', { shouldValidate: true });
+    }
+  }, [availableCards, selectedCardId, setValue]);
 
   const selectCard = (cardId: string) => {
-    const card = cards.find((item) => item.id === cardId);
+    const card = availableCards.find((item) => item.id === cardId);
     if (!card) return;
     setValue('cardId', card.id, { shouldValidate: true });
     setValue('tcg', getCardTcg(card) ?? 'pokemon', { shouldValidate: true });
+  };
+
+  const setListingType = (type: 'sell' | 'buy') => {
+    setValue('type', type, { shouldValidate: true });
   };
 
   const onSubmit = handleSubmit(async (values) => {
@@ -80,23 +102,30 @@ export function CreateListingScreen() {
       <View style={styles.block}>
         <SectionHeader title="Tipo" />
         <View style={styles.chips}>
-          <Chip label="Venta" active={listingType === 'sell'} onPress={() => setValue('type', 'sell', { shouldValidate: true })} />
-          <Chip label="Compra" active={listingType === 'buy'} onPress={() => setValue('type', 'buy', { shouldValidate: true })} />
+          <Chip label="Venta" active={listingType === 'sell'} onPress={() => setListingType('sell')} />
+          <Chip label="Compra" active={listingType === 'buy'} onPress={() => setListingType('buy')} />
         </View>
       </View>
 
       <View style={styles.block}>
         <SectionHeader title="Carta" action={selectedCard?.name ?? 'Selecciona una'} />
-        {isLoadingCards && !cards.length ? <StateView title="Cargando cartas" loading /> : null}
-        {cardsError ? <StateView title="No se pueden cargar cartas" description={cardsError} action="Reintentar" onAction={loadCards} /> : null}
-        {cards.length ? (
+        {listingType === 'sell' && isLoadingCollection && !ownedCards.length ? <StateView title="Cargando coleccion" loading /> : null}
+        {listingType === 'sell' && collectionError ? (
+          <StateView title="No se puede cargar tu coleccion" description={collectionError} action="Reintentar" onAction={loadCollection} />
+        ) : null}
+        {listingType === 'sell' && !isLoadingCollection && !collectionError && !ownedCards.length ? (
+          <StateView title="Coleccion vacia" description="Anade cartas desde el catalogo antes de publicar una venta." />
+        ) : null}
+        {listingType === 'buy' && isLoadingCards && !cards.length ? <StateView title="Cargando cartas" loading /> : null}
+        {listingType === 'buy' && cardsError ? <StateView title="No se pueden cargar cartas" description={cardsError} action="Reintentar" onAction={loadCards} /> : null}
+        {availableCards.length ? (
           <View style={styles.grid}>
-            {cards.map((card) => (
+            {availableCards.map((card) => (
               <TradingCardTile key={card.id} card={card} selected={selectedCard?.id === card.id} onPress={() => selectCard(card.id)} />
             ))}
           </View>
         ) : null}
-        {page < totalPages ? <Button title="Cargar mas cartas" variant="ghost" onPress={loadMore} /> : null}
+        {listingType === 'buy' && page < totalPages ? <Button title="Siguiente pagina" variant="ghost" onPress={loadMore} /> : null}
       </View>
 
       <View style={styles.form}>
