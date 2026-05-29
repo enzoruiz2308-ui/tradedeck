@@ -16,6 +16,7 @@ interface CardsState {
   error: string | null;
   loadCards: () => Promise<void>;
   loadMore: () => Promise<void>;
+  loadPrevious: () => Promise<void>;
   setQuery: (query: string) => void;
   setFilters: (filters: Partial<CardFilters>) => void;
   resetFilters: () => void;
@@ -23,7 +24,7 @@ interface CardsState {
 
 const defaultFilters: CardFilters = {
   query: '',
-  tcg: 'all',
+  tcg: 'onepiece',
   rarity: 'all',
   sortBy: 'name',
   sortOrder: 'asc',
@@ -34,7 +35,7 @@ function buildParams(filters: CardFilters, page: number, limit: number): CardQue
     page,
     limit,
     query: filters.query || undefined,
-    tcg: filters.tcg === 'all' ? undefined : filters.tcg,
+    tcg: filters.tcg,
     rarity: filters.rarity === 'all' ? undefined : filters.rarity,
     set: filters.set || undefined,
     minPrice: filters.minPrice,
@@ -74,16 +75,36 @@ export const useCardsStore = create<CardsState>((set, get) => ({
   },
 
   loadMore: async () => {
-    const { page, totalPages, isLoadingMore, filters, limit, cards } = get();
+    const { page, totalPages, isLoadingMore, filters, limit } = get();
     if (isLoadingMore || page >= totalPages) return;
 
     const nextPage = page + 1;
     set({ isLoadingMore: true, error: null });
     try {
       const response = await cardsApi.getCards(buildParams(filters, nextPage, limit));
-      const existingIds = new Set(cards.map((card) => card.id));
       set({
-        cards: [...cards, ...response.data.filter((card) => !existingIds.has(card.id))],
+        cards: response.data,
+        page: response.page,
+        limit: response.limit,
+        total: response.total,
+        totalPages: response.totalPages,
+        isLoadingMore: false,
+      });
+    } catch (error) {
+      set({ error: normalizeApiError(error).message, isLoadingMore: false });
+    }
+  },
+
+  loadPrevious: async () => {
+    const { page, isLoadingMore, filters, limit } = get();
+    if (isLoadingMore || page <= 1) return;
+
+    const previousPage = page - 1;
+    set({ isLoadingMore: true, error: null });
+    try {
+      const response = await cardsApi.getCards(buildParams(filters, previousPage, limit));
+      set({
+        cards: response.data,
         page: response.page,
         limit: response.limit,
         total: response.total,

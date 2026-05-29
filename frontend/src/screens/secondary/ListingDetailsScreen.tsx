@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 
@@ -10,6 +11,7 @@ import { Chip } from '@/src/components/ui/Chip';
 import { StateView } from '@/src/components/ui/StateView';
 import { useAuthStore } from '@/src/store/authStore';
 import { useListingsStore } from '@/src/store/listingsStore';
+import { chatApi } from '@/src/api/chatApi';
 import { palette } from '@/src/theme/tokens';
 import { ListingStatus } from '@/src/types';
 
@@ -19,6 +21,7 @@ export function ListingDetailsScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const user = useAuthStore((state) => state.user);
   const { listings, isMutating, error, updateListingStatus, deleteListing } = useListingsStore();
+  const [isContacting, setIsContacting] = useState(false);
   const listing = listings.find((item) => item.id === id);
 
   if (!listing) {
@@ -45,6 +48,19 @@ export function ListingDetailsScreen() {
     ]);
   };
 
+  const handleContact = async () => {
+    if (!user) return;
+    try {
+      setIsContacting(true);
+      const chat = await chatApi.createChat(Number(listing.id));
+      router.push({ pathname: '/chat', params: { chatId: chat.id } });
+    } catch (e: any) {
+      Alert.alert('Error', e.response?.data?.error || 'No se pudo abrir el chat');
+    } finally {
+      setIsContacting(false);
+    }
+  };
+
   return (
     <Screen>
       <ListingCard listing={listing} />
@@ -69,7 +85,16 @@ export function ListingDetailsScreen() {
           {error ? <Text style={styles.error}>{error}</Text> : null}
           <Button title={isMutating ? 'Aplicando...' : 'Eliminar anuncio'} variant="danger" disabled={isMutating} onPress={confirmDelete} />
         </View>
-      ) : null}
+      ) : (
+        <View style={styles.contactPanel}>
+          <Button 
+            title={isContacting ? "Abriendo chat..." : "Contactar al vendedor"} 
+            disabled={isContacting || !user} 
+            onPress={handleContact} 
+          />
+          {!user && <Text style={styles.text}>Inicia sesion para contactar</Text>}
+        </View>
+      )}
     </Screen>
   );
 }

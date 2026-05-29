@@ -153,3 +153,35 @@ export interface CollectionItemPayload {
   grading: GradingInfo;
   notes?: string;
 }
+
+export interface ChatSession {
+  id: number;
+  anuncio_id: number;
+  comprador_id: number;
+  vendedor_id: number;
+  fecha_creacion: string;
+  anuncio?: {
+    nombre_carta: string;
+    precio: number;
+  };
+  comprador?: {
+    id: number;
+    nombre: string;
+  };
+  vendedor?: {
+    id: number;
+    nombre: string;
+  };
+}
+
+export interface ChatMessage {
+  id: number;
+  chat_id: number;
+  remitente_id: number;
+  texto: string;
+  fecha_envio: string;
+  remitente?: {
+    id: number;
+    nombre: string;
+  };
+}

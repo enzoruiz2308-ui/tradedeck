@@ -71,6 +71,7 @@ export function ProfileScreen() {
       </View>
 
       <View style={styles.actions}>
+        <Button title="Mis Mensajes" variant="primary" onPress={() => router.push('/chats-list')} />
         <Button title="Editar perfil" variant="ghost" onPress={() => router.push('/edit-profile')} />
         <Button title="Editar coleccion" variant="ghost" onPress={() => router.push('/edit-collection')} />
       </View>
