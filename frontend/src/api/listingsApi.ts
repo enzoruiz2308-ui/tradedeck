@@ -1,4 +1,5 @@
 import { apiClient } from '@/src/api/client';
+import { cardsApi } from '@/src/api/cardsApi';
 import { Listing, ListingFormValues, ListingQueryParams, ListingStatus, PaginatedResponse } from '@/src/types';
 
 export const listingsApi = {
@@ -9,19 +10,30 @@ export const listingsApi = {
 
     const { data } = await apiClient.get<any[]>('/anuncios', { params: apiParams });
     
-    const mappedData: Listing[] = data.map(item => ({
-      id: String(item.id),
-      type: item.tipo === 'venta' ? 'sell' : 'buy',
-      cardId: item.nombre_carta,
-      tcg: item.juego as any,
-      sellerId: String(item.usuario_id),
-      price: item.precio,
-      description: item.descripcion,
-      condition: 'Mint',
-      grading: { company: 'raw' },
-      status: 'active',
-      createdAt: new Date().toISOString(),
-    }));
+    const mappedData: Listing[] = await Promise.all(
+      data.map(async (item) => {
+        let card = undefined;
+        try {
+          card = await cardsApi.getCard(item.nombre_carta);
+        } catch (err) {
+          console.warn('Failed to fetch card details for', item.nombre_carta, err);
+        }
+        return {
+          id: String(item.id),
+          type: item.tipo === 'venta' ? 'sell' : 'buy',
+          cardId: item.nombre_carta,
+          tcg: item.juego as any,
+          sellerId: String(item.usuario_id),
+          price: item.precio,
+          description: item.descripcion,
+          card,
+          condition: 'Mint',
+          grading: { company: 'raw' },
+          status: 'active',
+          createdAt: new Date().toISOString(),
+        };
+      })
+    );
 
     return {
       data: mappedData,
@@ -34,6 +46,12 @@ export const listingsApi = {
 
   async getListing(id: string): Promise<Listing> {
     const { data: item } = await apiClient.get<any>(`/anuncios/${id}`);
+    let card = undefined;
+    try {
+      card = await cardsApi.getCard(item.nombre_carta);
+    } catch (err) {
+      console.warn('Failed to fetch card details for', item.nombre_carta, err);
+    }
     return {
       id: String(item.id),
       type: item.tipo === 'venta' ? 'sell' : 'buy',
@@ -42,6 +60,7 @@ export const listingsApi = {
       sellerId: String(item.usuario_id),
       price: item.precio,
       description: item.descripcion,
+      card,
       condition: 'Mint',
       grading: { company: 'raw' },
       status: 'active',
