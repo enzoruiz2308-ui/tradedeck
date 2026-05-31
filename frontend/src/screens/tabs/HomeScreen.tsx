@@ -26,10 +26,8 @@ export function HomeScreen() {
       contentContainerStyle={styles.content}>
       <View style={styles.hero}>
         <View>
-          <Text style={styles.kicker}>TCG marketplace</Text>
           <Text style={styles.title}>TradeDeck</Text>
         </View>
-        <Text style={styles.heroCopy}>Frontend preparado para consumir el backend TradeDeck con anuncios paginados y ownership checks.</Text>
       </View>
 
       <SearchInput value={filters.query ?? ''} onChangeText={(query) => setFilters({ query })} />
