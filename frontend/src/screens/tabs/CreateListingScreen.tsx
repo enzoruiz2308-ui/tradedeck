@@ -182,9 +182,9 @@ export function CreateListingScreen() {
           render={({ field, fieldState }) => (
             <FormInput
               label="Precio EUR"
-              keyboardType="numeric"
-              value={String(field.value)}
-              onChangeText={(value) => field.onChange(Number(value.replace(',', '.')) || 0)}
+              keyboardType="decimal-pad"
+              value={field.value !== undefined && field.value !== null ? String(field.value) : ''}
+              onChangeText={field.onChange}
               error={fieldState.error?.message}
             />
           )}
