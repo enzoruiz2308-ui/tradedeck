@@ -99,7 +99,20 @@ export function CreateListingScreen() {
       return;
     }
 
-    await createListing({ ...values, status: 'active' });
+    const numericPrice = typeof values.price === 'string'
+      ? Number(values.price.replace(',', '.'))
+      : (values.price ?? 0);
+
+    await createListing({
+      type: values.type,
+      cardId: values.cardId,
+      tcg: values.tcg,
+      description: values.description,
+      price: numericPrice,
+      condition: values.condition,
+      grading: values.grading,
+      status: 'active',
+    });
     reset();
     router.push('/(tabs)');
   });

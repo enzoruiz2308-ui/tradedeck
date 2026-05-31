@@ -21,10 +21,18 @@ export const listingSchema = z.object({
   cardId: z.string().min(1, 'Selecciona una carta.'),
   tcg: z.enum(['pokemon', 'onepiece']),
   description: z.string().optional(),
-  price: z.preprocess(
-    (val) => (val === '' || val === undefined || val === null ? 0 : Number(String(val).replace(',', '.'))),
-    z.number().min(0.01, 'El precio debe ser mayor que cero.')
-  ),
+  price: z.union([z.string(), z.number()])
+    .transform((val) => {
+      const str = String(val).trim().replace(',', '.');
+      if (str === '') return undefined;
+      const num = Number(str);
+      return isNaN(num) ? undefined : num;
+    })
+    .pipe(
+      z.number({
+        message: 'Solo se aceptan números decimales.',
+      }).min(0.01, 'El precio debe ser mayor que cero.')
+    ),
   condition: z.enum(['Mint', 'Near Mint', 'Excellent', 'Good', 'Played', 'Poor']),
   grading: z.object({
     company: z.enum(['raw', 'PSA', 'BGS', 'CGC', 'ACE', 'other']),
@@ -53,6 +61,6 @@ export const collectionItemSchema = z.object({
 
 export type LoginForm = z.infer<typeof loginSchema>;
 export type RegisterForm = z.infer<typeof registerSchema>;
-export type ListingForm = z.infer<typeof listingSchema>;
+export type ListingForm = z.input<typeof listingSchema>;
 export type ProfileForm = z.infer<typeof profileSchema>;
 export type CollectionItemForm = z.infer<typeof collectionItemSchema>;
