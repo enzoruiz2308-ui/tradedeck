@@ -172,34 +172,7 @@ with app.app_context():
     db.session.add(p_lucia)
     db.session.flush()
 
-    # --- 3. Crear Anuncios (Legacy) y Listings ---
-    print("Creando anuncios y listados de cartas...")
-    
-    # Anuncios (Legacy)
-    a1 = Anuncio(tipo="venta", juego="pokemon", nombre_carta="base1-58", precio=1.25, descripcion="Carta Pikachu común en perfecto estado, ideal para coleccionar.", usuario_id=u_enzo.id)
-    a2 = Anuncio(tipo="venta", juego="onepiece", nombre_carta="OP01-024", precio=15.00, descripcion="Luffy SR Romance Dawn, guardada en funda desde el primer día.", usuario_id=u_marc.id)
-    a3 = Anuncio(tipo="compra", juego="pokemon", nombre_carta="base1-2", precio=80.00, descripcion="Busco Blastoise original Base Set, pago según estado (mínimo Excellent).", usuario_id=u_lucia.id)
-    a4 = Anuncio(tipo="venta", juego="onepiece", nombre_carta="OP01-001", precio=5.50, descripcion="Zoro Leader en perfecto estado.", usuario_id=u_enzo.id)
-    
-    db.session.add(a1)
-    db.session.add(a2)
-    db.session.add(a3)
-    db.session.add(a4)
-    db.session.flush()
-
-    # Listings
-    l1 = Listing(type="sell", card_id="base1-58", tcg="pokemon", seller_id=u_enzo.id, price=1.25, condition="Near Mint", description="Carta Pikachu común en perfecto estado, ideal para coleccionar.", grading={"company": "raw"}, status="active")
-    l2 = Listing(type="sell", card_id="OP01-024", tcg="onepiece", seller_id=u_marc.id, price=15.00, condition="Mint", description="Luffy SR Romance Dawn, guardada en funda desde el primer día.", grading={"company": "raw"}, status="active")
-    l3 = Listing(type="buy", card_id="base1-2", tcg="pokemon", seller_id=u_lucia.id, price=80.00, condition="Excellent", description="Busco Blastoise original Base Set, pago según estado (mínimo Excellent).", grading={"company": "raw"}, status="active")
-    l4 = Listing(type="sell", card_id="OP01-001", tcg="onepiece", seller_id=u_enzo.id, price=5.50, condition="Near Mint", description="Zoro Leader en perfecto estado.", grading={"company": "raw"}, status="active")
-
-    db.session.add(l1)
-    db.session.add(l2)
-    db.session.add(l3)
-    db.session.add(l4)
-    db.session.flush()
-
-    # --- 4. Colecciones de los Usuarios (CollectionItem) ---
+    # --- 3. Colecciones de los Usuarios (CollectionItem) ---
     print("Creando inventarios de colecciones para los perfiles...")
     
     col_items = [
@@ -213,25 +186,5 @@ with app.app_context():
         db.session.add(ci)
     db.session.flush()
 
-    # --- 5. Sesiones de Chat y Mensajes de Prueba ---
-    print("Inicializando chats de prueba activos...")
-    
-    chat1 = ChatSession(anuncio_id=a1.id, comprador_id=u_marc.id, vendedor_id=u_enzo.id)
-    db.session.add(chat1)
-    db.session.flush()
-
-    now = datetime.utcnow()
-    m1 = ChatMessage(chat_id=chat1.id, remitente_id=u_marc.id, texto="Hola, ¿sigue disponible la carta de Pikachu?", fecha_envio=now - timedelta(hours=1))
-    m2 = ChatMessage(chat_id=chat1.id, remitente_id=u_enzo.id, texto="¡Hola! Sí, está en perfecto estado. Si quieres te mando más fotos por aquí.", fecha_envio=now - timedelta(minutes=45))
-    m3 = ChatMessage(chat_id=chat1.id, remitente_id=u_marc.id, texto="Me interesa bastante. ¿Haces envíos a Madrid?", fecha_envio=now - timedelta(minutes=30))
-    m4 = ChatMessage(chat_id=chat1.id, remitente_id=u_enzo.id, texto="Sí, hago envíos por correo certificado por 4.50€ adicionales o correo ordinario bajo tu responsabilidad.", fecha_envio=now - timedelta(minutes=20))
-    m5 = ChatMessage(chat_id=chat1.id, remitente_id=u_marc.id, texto="Perfecto, me quedo con el certificado. Pásame tus datos por privado.", fecha_envio=now - timedelta(minutes=10))
-
-    db.session.add(m1)
-    db.session.add(m2)
-    db.session.add(m3)
-    db.session.add(m4)
-    db.session.add(m5)
-
     db.session.commit()
-    print("¡Base de datos local recreada y poblada con éxito!")
+    print("¡Base de datos local recreada y poblada con éxito (sin anuncios ni chats de demostración)!")

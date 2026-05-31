@@ -111,7 +111,7 @@ def login():
     usuario, token, error = service.login(datos)
     if error:
         return jsonify({"error": error}), 401
-    return jsonify({"token": token, "nombre": usuario.nombre}), 200
+    return jsonify({"token": token, "nombre": usuario.nombre, "id": usuario.id}), 200
 
 @usuario_bp.route("/api/perfil", methods=["GET"])
 @jwt_required()

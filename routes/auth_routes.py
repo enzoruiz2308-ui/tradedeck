@@ -24,6 +24,7 @@ def login():
 
 
 @auth_bp.route("/auth/refresh", methods=["POST"])
+@auth_bp.route("/api/auth/refresh", methods=["POST"])
 def refresh():
     refresh_token = (request.get_json() or {}).get("refreshToken")
     response, error = service.refresh(refresh_token)

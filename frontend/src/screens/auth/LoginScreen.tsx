@@ -14,7 +14,7 @@ export function LoginScreen() {
   const { login, demoLogin, isLoading, error } = useAuthStore();
   const { control, handleSubmit, formState } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: 'demo@tradedeck.local', password: 'tradedeck' },
+    defaultValues: { email: 'enzo@tradedeck.com', password: '1234' },
     mode: 'onChange',
   });
 

@@ -60,14 +60,14 @@ export function CreateListingScreen() {
   const condition = watch('condition');
   const gradingCompany = watch('grading.company');
   const ownedCards = collection.map((item) => item.card).filter((card): card is TradingCard => Boolean(card));
-  const availableCards = listingType === 'sell' ? ownedCards : cards;
+  const availableCards = (listingType === 'sell' && ownedCards.length > 0) ? ownedCards : cards;
   const selectedCard = availableCards.find((card) => card.id === selectedCardId);
 
   useEffect(() => {
-    if (listingType === 'buy') {
+    if (listingType === 'buy' || (listingType === 'sell' && ownedCards.length === 0)) {
       void loadCards();
     }
-  }, [listingType, filters.query, filters.tcg, loadCards]);
+  }, [listingType, ownedCards.length, filters.query, filters.tcg, loadCards]);
 
   useEffect(() => {
     if (isAuthenticated && !collection.length) {
@@ -122,7 +122,7 @@ export function CreateListingScreen() {
       <View style={styles.block}>
         <SectionHeader title="Carta" action={selectedCard?.name ?? 'Selecciona una'} />
         
-        {listingType === 'buy' ? (
+        {(listingType === 'buy' || (listingType === 'sell' && ownedCards.length === 0)) ? (
           <View style={{ gap: 10, marginBottom: 6 }}>
             <SearchInput
               value={filters.query}
@@ -147,9 +147,6 @@ export function CreateListingScreen() {
         {listingType === 'sell' && isLoadingCollection && !ownedCards.length ? <StateView title="Cargando coleccion" loading /> : null}
         {listingType === 'sell' && collectionError ? (
           <StateView title="No se puede cargar tu coleccion" description={collectionError} action="Reintentar" onAction={loadCollection} />
-        ) : null}
-        {listingType === 'sell' && !isLoadingCollection && !collectionError && !ownedCards.length ? (
-          <StateView title="Coleccion vacia" description="Anade cartas desde el catalogo antes de publicar una venta." />
         ) : null}
         {listingType === 'buy' && isLoadingCards && !cards.length ? <StateView title="Cargando cartas" loading /> : null}
         {listingType === 'buy' && cardsError ? <StateView title="No se pueden cargar cartas" description={cardsError} action="Reintentar" onAction={loadCards} /> : null}

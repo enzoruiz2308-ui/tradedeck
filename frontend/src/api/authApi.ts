@@ -16,7 +16,7 @@ export const authApi = {
       accessToken: response.token,
       refreshToken: response.token, // Mocked as we only get one token
       user: {
-        id: '1', // Will be updated when /perfil is called
+        id: String(response.id || '1'),
         username: response.nombre,
         email: payload.email,
         createdAt: new Date().toISOString(),
