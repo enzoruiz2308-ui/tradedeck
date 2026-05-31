@@ -6,6 +6,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { TradingCardTile } from '@/src/components/cards/TradingCardTile';
 import { FormInput } from '@/src/components/forms/FormInput';
+import { SearchInput } from '@/src/components/forms/SearchInput';
 import { Screen } from '@/src/components/layout/Screen';
 import { SectionHeader } from '@/src/components/layout/SectionHeader';
 import { Button } from '@/src/components/ui/Button';
@@ -25,7 +26,18 @@ const gradingCompanies: GradingCompany[] = ['raw', 'PSA', 'BGS', 'CGC', 'ACE', '
 
 export function CreateListingScreen() {
   const { isAuthenticated } = useAuthStore();
-  const { cards, isLoading: isLoadingCards, error: cardsError, loadCards, loadMore, page, totalPages } = useCardsStore();
+  const {
+    cards,
+    filters,
+    isLoading: isLoadingCards,
+    error: cardsError,
+    loadCards,
+    loadMore,
+    page,
+    totalPages,
+    setQuery,
+    setFilters
+  } = useCardsStore();
   const { createListing, isMutating, error } = useListingsStore();
   const { collection, isLoading: isLoadingCollection, error: collectionError, loadCollection } = useUserStore();
   const { control, handleSubmit, watch, setValue, formState, reset } = useForm<ListingForm>({
@@ -43,12 +55,6 @@ export function CreateListingScreen() {
     mode: 'onChange',
   });
 
-  useEffect(() => {
-    if (!cards.length) {
-      void loadCards();
-    }
-  }, [cards.length, loadCards]);
-
   const listingType = watch('type');
   const selectedCardId = watch('cardId');
   const condition = watch('condition');
@@ -56,6 +62,12 @@ export function CreateListingScreen() {
   const ownedCards = collection.map((item) => item.card).filter((card): card is TradingCard => Boolean(card));
   const availableCards = listingType === 'sell' ? ownedCards : cards;
   const selectedCard = availableCards.find((card) => card.id === selectedCardId);
+
+  useEffect(() => {
+    if (listingType === 'buy') {
+      void loadCards();
+    }
+  }, [listingType, filters.query, filters.tcg, loadCards]);
 
   useEffect(() => {
     if (isAuthenticated && !collection.length) {
@@ -96,7 +108,7 @@ export function CreateListingScreen() {
     <Screen>
       <View>
         <Text style={styles.title}>Publicar anuncio</Text>
-        <Text style={styles.subtitle}>Crea un anuncio backend-ready. Las imagenes se resuelven desde la carta oficial en backend.</Text>
+        <Text style={styles.subtitle}>Crea un anuncio de compra o venta de una carta.</Text>
       </View>
 
       <View style={styles.block}>
@@ -109,6 +121,29 @@ export function CreateListingScreen() {
 
       <View style={styles.block}>
         <SectionHeader title="Carta" action={selectedCard?.name ?? 'Selecciona una'} />
+        
+        {listingType === 'buy' ? (
+          <View style={{ gap: 10, marginBottom: 6 }}>
+            <SearchInput
+              value={filters.query}
+              onChangeText={setQuery}
+              placeholder="Buscar carta por nombre..."
+            />
+            <View style={styles.chips}>
+              <Chip
+                label="Pokemon"
+                active={filters.tcg === 'pokemon'}
+                onPress={() => setFilters({ tcg: 'pokemon' })}
+              />
+              <Chip
+                label="One Piece"
+                active={filters.tcg === 'onepiece'}
+                onPress={() => setFilters({ tcg: 'onepiece' })}
+              />
+            </View>
+          </View>
+        ) : null}
+
         {listingType === 'sell' && isLoadingCollection && !ownedCards.length ? <StateView title="Cargando coleccion" loading /> : null}
         {listingType === 'sell' && collectionError ? (
           <StateView title="No se puede cargar tu coleccion" description={collectionError} action="Reintentar" onAction={loadCollection} />
