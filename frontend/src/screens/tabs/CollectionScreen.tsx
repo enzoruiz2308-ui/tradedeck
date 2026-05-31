@@ -28,8 +28,8 @@ export function CollectionScreen() {
   return (
     <Screen>
       <View>
-        <Text style={styles.title}>Coleccion</Text>
-        <Text style={styles.subtitle}>Gestion autenticada desde /me/collection con cantidad, estado, grading y notas.</Text>
+        <Text style={styles.title}>Colección</Text>
+        <Text style={styles.subtitle}>Gestiona tus cartas.</Text>
       </View>
 
       <View style={styles.stats}>
