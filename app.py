@@ -1,6 +1,10 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
-from flasgger import Swagger
+try:
+    from flasgger import Swagger
+    has_swagger = True
+except ImportError:
+    has_swagger = False
 from config import Config, db, jwt
 from routes.usuario_routes import usuario_bp
 from routes.anuncio_routes import anuncio_bp
@@ -26,7 +30,10 @@ def create_app():
 
     db.init_app(app)
     jwt.init_app(app)
-    Swagger(app)
+    if has_swagger:
+        Swagger(app)
+    else:
+        print("[TradeDeck Local] Advertencia: flasgger no instalado. Las apidocs (/apidocs) no estarán disponibles.")
     CORS(app)
 
     @jwt.invalid_token_loader

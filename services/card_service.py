@@ -21,17 +21,72 @@ OPTCG_SOURCE_PAGE_SIZE = 32
 class CardService:
     pokemon_url = "https://api.pokemontcg.io/v2/cards"
 
+    def _save_to_cache(self, card):
+        from models.carta_cache import CartaCache
+        from config import db
+        try:
+            existing = CartaCache.query.filter_by(external_id=str(card["id"]), tcg=card["tcg"]).first()
+            if not existing:
+                cached = CartaCache(
+                    external_id=str(card["id"]),
+                    tcg=card["tcg"],
+                    name=card["name"],
+                    set_name=card["set"],
+                    rarity=card["rarity"],
+                    image=card["image"],
+                    market_price=card.get("marketPrice") or 0,
+                    payload=card.get("payload")
+                )
+                db.session.add(cached)
+                db.session.commit()
+        except Exception:
+            db.session.rollback()
+
     def list_cards(self, params):
         page = max(int(params.get("page", 1)), 1)
         limit = min(max(int(params.get("limit", 20)), 1), 100)
         tcg = params.get("tcg")
 
-        if tcg == "pokemon":
-            cards, total = self._safe_source("pokemon", params, page, limit)
-        elif tcg == "onepiece":
-            cards, total = self._safe_source("onepiece", params, page, limit)
-        else:
-            cards, total = self._safe_source("onepiece", params, page, limit)
+        cards = []
+        total = 0
+        try:
+            if tcg == "pokemon":
+                cards, total = self._safe_source("pokemon", params, page, limit)
+            elif tcg == "onepiece":
+                cards, total = self._safe_source("onepiece", params, page, limit)
+            else:
+                cards, total = self._safe_source("onepiece", params, page, limit)
+            
+            for card in cards:
+                self._save_to_cache(card)
+        except Exception:
+            from models.carta_cache import CartaCache
+            query = CartaCache.query
+            if tcg:
+                query = query.filter_by(tcg=tcg)
+            
+            search = (params.get("query") or "").strip().lower()
+            if search:
+                query = query.filter(CartaCache.name.ilike(f"%{search}%") | CartaCache.set_name.ilike(f"%{search}%"))
+            
+            rarity = params.get("rarity")
+            if rarity and rarity != "all":
+                query = query.filter_by(rarity=rarity)
+                
+            total = query.count()
+            rows = query.offset((page - 1) * limit).limit(limit).all()
+            cards = []
+            for row in rows:
+                cards.append({
+                    "id": row.external_id,
+                    "tcg": row.tcg,
+                    "name": row.name,
+                    "set": row.set_name,
+                    "rarity": row.rarity,
+                    "image": row.image,
+                    "marketPrice": row.market_price,
+                    "payload": row.payload
+                })
 
         cards = self._apply_local_filters(cards, params)
         cards = self._sort(cards, params.get("sortBy"), params.get("sortOrder", "asc"))
@@ -41,14 +96,40 @@ class CardService:
         return self.list_cards(params)
 
     def get_card(self, card_id, tcg=None):
+        from models.carta_cache import CartaCache
+        query = CartaCache.query.filter_by(external_id=str(card_id))
+        if tcg:
+            query = query.filter_by(tcg=tcg)
+        cached = query.first()
+        if cached:
+            return card_to_dto({
+                "id": cached.external_id,
+                "tcg": cached.tcg,
+                "name": cached.name,
+                "set": cached.set_name,
+                "rarity": cached.rarity,
+                "image": cached.image,
+                "marketPrice": cached.market_price,
+                "payload": cached.payload
+            })
+
+        card = None
         if tcg in (None, "pokemon"):
-            card = self._fetch_pokemon_card(card_id)
-            if card:
-                return card_to_dto(card)
+            try:
+                card = self._fetch_pokemon_card(card_id)
+                if card:
+                    self._save_to_cache(card)
+                    return card_to_dto(card)
+            except Exception:
+                pass
         if tcg in (None, "onepiece"):
-            card = self._fetch_onepiece_card(card_id)
-            if card:
-                return card_to_dto(card)
+            try:
+                card = self._fetch_onepiece_card(card_id)
+                if card:
+                    self._save_to_cache(card)
+                    return card_to_dto(card)
+            except Exception:
+                pass
         return None
 
     def ensure_cached(self, card_id, tcg):
