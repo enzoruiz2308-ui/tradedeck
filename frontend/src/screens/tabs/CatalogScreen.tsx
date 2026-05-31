@@ -33,8 +33,7 @@ export function CatalogScreen() {
   return (
     <Screen>
       <View style={styles.header}>
-        <Text style={styles.title}>Catalogo</Text>
-        <Text style={styles.subtitle}>Cartas normalizadas por el backend TradeDeck. El frontend no consulta APIs publicas TCG.</Text>
+        <Text style={styles.title}>Catálogo</Text>
       </View>
 
       <SearchInput value={filters.query} onChangeText={setQuery} placeholder="Buscar por nombre, set o rareza" />
