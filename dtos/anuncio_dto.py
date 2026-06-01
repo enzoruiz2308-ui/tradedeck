@@ -7,8 +7,12 @@ def dto_entrada_anuncio(datos):
         errores.append("El juego debe ser 'pokemon' o 'onepiece'")
     if not datos.get("nombre_carta"):
         errores.append("El nombre de la carta es obligatorio")
-    if not datos.get("precio") or datos["precio"] <= 0:
-        errores.append("El precio debe ser mayor que 0")
+    try:
+        precio = float(datos.get("precio", 0))
+        if precio <= 0:
+            errores.append("El precio debe ser mayor que 0")
+    except (ValueError, TypeError):
+        errores.append("El precio debe ser un número válido")
     return errores
 
 # DTO de salida

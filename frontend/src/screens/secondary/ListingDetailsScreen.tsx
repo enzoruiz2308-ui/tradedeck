@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 
-import { ListingCard } from '@/src/components/cards/ListingCard';
+import { ListingCard, statusLabels } from '@/src/components/cards/ListingCard';
 import { TradingCardTile } from '@/src/components/cards/TradingCardTile';
 import { Screen } from '@/src/components/layout/Screen';
 import { SectionHeader } from '@/src/components/layout/SectionHeader';
@@ -70,7 +70,7 @@ export function ListingDetailsScreen() {
         <Text style={styles.text}>{listing.description || 'Sin descripcion.'}</Text>
         <Text style={styles.text}>Vendedor: {listing.seller?.username ?? listing.sellerId}</Text>
         <Text style={styles.text}>Estado carta: {listing.condition}</Text>
-        <Text style={styles.text}>Status anuncio: {listing.status}</Text>
+        <Text style={styles.text}>Status anuncio: {statusLabels[listing.status]}</Text>
         <Text style={styles.text}>Grading: {listing.grading.company === 'raw' ? 'Raw' : `${listing.grading.company} ${listing.grading.grade ?? ''}`}</Text>
       </View>
 
@@ -79,7 +79,7 @@ export function ListingDetailsScreen() {
           <SectionHeader title="Acciones de propietario" />
           <View style={styles.chips}>
             {ownerStatuses.map((status) => (
-              <Chip key={status} label={status} active={listing.status === status} onPress={() => void updateListingStatus(listing.id, status)} />
+              <Chip key={status} label={statusLabels[status]} active={listing.status === status} onPress={() => void updateListingStatus(listing.id, status)} />
             ))}
           </View>
           {error ? <Text style={styles.error}>{error}</Text> : null}

@@ -15,12 +15,12 @@ interface ListingCardProps {
   onFavorite?: () => void;
 }
 
-const statusLabels: Record<ListingStatus, string> = {
-  active: 'Activo',
-  reserved: 'Reservado',
-  sold: 'Vendido',
-  paused: 'Pausado',
-  expired: 'Caducado',
+export const statusLabels: Record<ListingStatus, string> = {
+  active: 'Activa',
+  reserved: 'Reservada',
+  sold: 'Vendida',
+  paused: 'Pausada',
+  expired: 'Caducada',
 };
 
 export function ListingCard({ listing, favorite, compact, onPress, onFavorite }: ListingCardProps) {
