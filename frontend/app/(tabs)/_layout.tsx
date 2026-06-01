@@ -27,7 +27,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="catalog"
         options={{
-          title: 'Catalogo',
+          title: 'Catálogo',
           tabBarIcon: ({ color }) => <Ionicons size={24} name="grid" color={color} />,
         }}
       />
@@ -41,7 +41,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="collection"
         options={{
-          title: 'Coleccion',
+          title: 'Colección',
           tabBarIcon: ({ color }) => <Ionicons size={24} name="albums" color={color} />,
         }}
       />
