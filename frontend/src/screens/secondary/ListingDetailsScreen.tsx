@@ -35,7 +35,7 @@ export function ListingDetailsScreen() {
   const isOwner = Boolean(user && listing.sellerId === user.id);
 
   const confirmDelete = () => {
-    Alert.alert('Eliminar anuncio', 'Esta accion eliminara el anuncio del backend.', [
+    Alert.alert('Eliminar anuncio', 'Esta acción eliminar el anunció.', [
       { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Eliminar',
@@ -92,7 +92,7 @@ export function ListingDetailsScreen() {
             disabled={isContacting || !user} 
             onPress={handleContact} 
           />
-          {!user && <Text style={styles.text}>Inicia sesion para contactar</Text>}
+          {!user && <Text style={styles.text}>Inicia sesión para contactar</Text>}
         </View>
       )}
     </Screen>
