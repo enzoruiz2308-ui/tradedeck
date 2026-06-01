@@ -38,7 +38,7 @@ function getServerMessage(error: AxiosError) {
 
 export function ensureApiUrl() {
   if (!API_URL) {
-    throw new ApiError('Backend no configurado. Define EXPO_PUBLIC_API_URL para conectar TradeDeck.', 0);
+    throw new ApiError('Error de servicio: No se ha podido establecer conexión con los servidores de TradeDeck..', 0);
   }
 }
 
@@ -54,12 +54,22 @@ export function normalizeApiError(error: unknown) {
     );
   }
 
-  if (error instanceof Error) {
-    return new ApiError(error.message);
-  }
+if (error instanceof AxiosError) {
+    const serverMessage = getServerMessage(error);
+    if (serverMessage) {
+      return new ApiError(serverMessage, error.response?.status);
+    }
 
-  return new ApiError('Error inesperado al comunicar con el backend.');
-}
+    if (error.code === 'ERR_NETWORK') {
+      return new ApiError('Problema de conexión. Por favor, revisa tu acceso a internet e inténtalo de nuevo.', 0);
+    }
+
+    if (error.code === 'ECONNABORTED') {
+      return new ApiError('El servidor está tardando demasiado en responder. Inténtalo más tarde.', 408);
+    }
+
+    return new ApiError('Servicio temporalmente no disponible. Estamos trabajando para solucionarlo.', error.response?.status);
+  }
 
 apiClient.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
   ensureApiUrl();
