@@ -29,7 +29,7 @@ export function RegisterScreen() {
     <Screen contentContainerStyle={styles.screen}>
       <View>
         <Text style={styles.title}>Crea tu cuenta</Text>
-        <Text style={styles.subtitle}>Publica anuncios, guarda favoritos y gestiona tu coleccion.</Text>
+        <Text style={styles.subtitle}>Publica anuncios de compra o venta de cartas y gestiona tu colección.</Text>
       </View>
 
       <View style={styles.form}>

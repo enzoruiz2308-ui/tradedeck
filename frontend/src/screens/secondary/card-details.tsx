@@ -21,7 +21,7 @@ export default function CardDetailsScreen() {
   if (!card) {
     return (
       <Screen>
-        <StateView title="Carta no encontrada" description="La carta solicitada no esta en el catalogo cargado." />
+        <StateView title="Carta no encontrada" description="La carta solicitada no se ha encontrado." />
       </Screen>
     );
   }
@@ -32,7 +32,7 @@ export default function CardDetailsScreen() {
         <Image source={{ uri: card.image }} style={styles.image} contentFit="contain" />
         {owned ? (
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>En coleccion</Text>
+            <Text style={styles.badgeText}>En colección</Text>
           </View>
         ) : null}
       </View>
@@ -46,7 +46,7 @@ export default function CardDetailsScreen() {
       </View>
 
       <Button
-        title={owned ? 'Ya esta en coleccion' : isMutating ? 'Anadiendo...' : 'Anadir a coleccion'}
+        title={owned ? 'Ya está en colección' : isMutating ? 'Añadiendo...' : 'Añadir a coleccion'}
         disabled={owned || isMutating}
         onPress={() =>
           addToCollection({

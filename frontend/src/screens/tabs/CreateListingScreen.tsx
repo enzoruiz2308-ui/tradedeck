@@ -96,7 +96,7 @@ export function CreateListingScreen() {
     <Screen>
       <View>
         <Text style={styles.title}>Publicar anuncio</Text>
-        <Text style={styles.subtitle}>Crea un anuncio backend-ready. Las imagenes se resuelven desde la carta oficial en backend.</Text>
+        <Text style={styles.subtitle}>Crea un anuncio de venta de tus cartas o de compra de las cartas que buscas.</Text>
       </View>
 
       <View style={styles.block}>

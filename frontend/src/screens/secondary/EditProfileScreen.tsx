@@ -29,7 +29,7 @@ export function EditProfileScreen() {
   if (!user) {
     return (
       <Screen>
-        <StateView title="Sesion requerida" description="Inicia sesion para editar tu perfil." />
+        <StateView title="Sesión requerida" description="Inicia sesión para editar tu perfil." />
       </Screen>
     );
   }
@@ -44,7 +44,6 @@ export function EditProfileScreen() {
     <Screen>
       <View>
         <Text style={styles.title}>Editar perfil</Text>
-        <Text style={styles.subtitle}>Actualiza los datos guardados en el backend.</Text>
       </View>
 
       <Controller
