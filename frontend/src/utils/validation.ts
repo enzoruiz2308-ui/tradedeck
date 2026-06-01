@@ -21,7 +21,7 @@ export const listingSchema = z.object({
   cardId: z.string().min(1, 'Selecciona una carta.'),
   tcg: z.enum(['pokemon', 'onepiece']),
   description: z.string().optional(),
-  price: z.number().min(1, 'El precio debe ser mayor que cero.'),
+  price: z.number().min(0.01, 'El precio debe ser mayor que cero.'),
   condition: z.enum(['Mint', 'Near Mint', 'Excellent', 'Good', 'Played', 'Poor']),
   grading: z.object({
     company: z.enum(['raw', 'PSA', 'BGS', 'CGC', 'ACE', 'other']),

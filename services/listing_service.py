@@ -123,8 +123,11 @@ class ListingService:
             return "El tcg debe ser pokemon o onepiece"
         if not datos.get("cardId"):
             return "La carta es obligatoria"
-        if float(datos.get("price") or 0) <= 0:
-            return "El precio debe ser mayor que cero"
+        try:
+            if float(datos.get("price") or 0) <= 0:
+                return "El precio debe ser mayor que cero"
+        except (ValueError, TypeError):
+            return "El precio debe ser un número válido"
         if datos.get("condition") not in self.allowed_conditions:
             return "Estado de carta no valido"
         if datos.get("status") and datos.get("status") not in self.allowed_statuses:
