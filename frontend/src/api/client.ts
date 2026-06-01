@@ -49,7 +49,7 @@ export function normalizeApiError(error: unknown) {
 
   if (error instanceof AxiosError) {
     return new ApiError(
-      getServerMessage(error) ?? 'No se ha podido completar la peticion con el backend.',
+      getServerMessage(error) ?? 'No se ha podido completar la peticion.',
       error.response?.status,
     );
   }
