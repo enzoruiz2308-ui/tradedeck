@@ -21,7 +21,6 @@ export function EditProfileScreen() {
     defaultValues: {
       username: user?.username ?? '',
       bio: user?.bio ?? '',
-      avatar: user?.avatar ?? '',
     },
     mode: 'onChange',
   });
@@ -29,13 +28,13 @@ export function EditProfileScreen() {
   if (!user) {
     return (
       <Screen>
-        <StateView title="Sesion requerida" description="Inicia sesion para editar tu perfil." />
+        <StateView title="Sesión requerida" description="Inicia sesión para editar tu perfil." />
       </Screen>
     );
   }
 
   const onSubmit = handleSubmit(async (values) => {
-    const updated = await updateProfile({ ...values, avatar: values.avatar || undefined });
+    const updated = await updateProfile({ ...values});
     updateUser(updated);
     router.back();
   });
@@ -44,7 +43,7 @@ export function EditProfileScreen() {
     <Screen>
       <View>
         <Text style={styles.title}>Editar perfil</Text>
-        <Text style={styles.subtitle}>Actualiza los datos guardados en el backend.</Text>
+        <Text style={styles.subtitle}>Actualiza tus datos.</Text>
       </View>
 
       <Controller
@@ -57,13 +56,6 @@ export function EditProfileScreen() {
         name="bio"
         render={({ field, fieldState }) => (
           <FormInput label="Bio" multiline value={field.value} onChangeText={field.onChange} error={fieldState.error?.message} style={styles.textarea} />
-        )}
-      />
-      <Controller
-        control={control}
-        name="avatar"
-        render={({ field, fieldState }) => (
-          <FormInput label="Avatar URL" autoCapitalize="none" value={field.value} onChangeText={field.onChange} error={fieldState.error?.message} />
         )}
       />
 

@@ -157,9 +157,9 @@ export function CreateListingScreen() {
           </View>
         ) : null}
 
-        {listingType === 'sell' && isLoadingCollection && !ownedCards.length ? <StateView title="Cargando coleccion" loading /> : null}
+        {listingType === 'sell' && isLoadingCollection && !ownedCards.length ? <StateView title="Cargando colección" loading /> : null}
         {listingType === 'sell' && collectionError ? (
-          <StateView title="No se puede cargar tu coleccion" description={collectionError} action="Reintentar" onAction={loadCollection} />
+          <StateView title="No se puede cargar tu colección" description={collectionError} action="Reintentar" onAction={loadCollection} />
         ) : null}
         {listingType === 'buy' && isLoadingCards && !cards.length ? <StateView title="Cargando cartas" loading /> : null}
         {listingType === 'buy' && cardsError ? <StateView title="No se pueden cargar cartas" description={cardsError} action="Reintentar" onAction={loadCards} /> : null}
@@ -170,7 +170,7 @@ export function CreateListingScreen() {
             ))}
           </View>
         ) : null}
-        {listingType === 'buy' && page < totalPages ? <Button title="Siguiente pagina" variant="ghost" onPress={loadMore} /> : null}
+        {listingType === 'buy' && page < totalPages ? <Button title="Siguiente página" variant="secondary" onPress={loadMore} /> : null}
       </View>
 
       <View style={styles.form}>

@@ -32,8 +32,8 @@ export function ProfileScreen() {
     return (
       <Screen contentContainerStyle={styles.center}>
         <StateView
-          title="Inicia sesion"
-          description="El perfil, tus anuncios y tu coleccion requieren una sesion autenticada."
+          title="Inicia sesión"
+          description="El perfil, tus anuncios y tu colección requieren una sesión autenticada."
           action="Entrar en demo"
           onAction={demoLogin}
         />
@@ -50,7 +50,7 @@ export function ProfileScreen() {
         {user.avatar ? <Image source={{ uri: user.avatar }} style={styles.avatar} contentFit="cover" /> : <View style={styles.avatar} />}
         <View style={styles.profileText}>
           <Text style={styles.username}>{user.username}</Text>
-          <Text style={styles.bio}>{user.bio ?? 'Sin bio todavia.'}</Text>
+          <Text style={styles.bio}>{user.bio ?? 'Sin bio todavía.'}</Text>
           <Text style={styles.rating}>Rating {user.rating?.toFixed(1) ?? 'Nuevo'} / 5</Text>
         </View>
       </View>
@@ -66,14 +66,14 @@ export function ProfileScreen() {
         </View>
         <View style={styles.stat}>
           <Text style={styles.statValue}>{formatPrice(collectionValue)}</Text>
-          <Text style={styles.statLabel}>Valor</Text>
+          <Text style={styles.statLabel}>Valor de colección</Text>
         </View>
       </View>
 
       <View style={styles.actions}>
-        <Button title="Mis Mensajes" variant="primary" onPress={() => router.push('/chats-list')} />
+        <Button title="Mis mensajes" variant="primary" onPress={() => router.push('/chats-list')} />
         <Button title="Editar perfil" variant="ghost" onPress={() => router.push('/edit-profile')} />
-        <Button title="Editar coleccion" variant="ghost" onPress={() => router.push('/edit-collection')} />
+        <Button title="Editar colección" variant="ghost" onPress={() => router.push('/edit-collection')} />
       </View>
 
       <SectionHeader title="Tus anuncios" />
@@ -81,10 +81,10 @@ export function ProfileScreen() {
       {activeListings.length ? (
         activeListings.map((listing) => <ListingCard key={listing.id} listing={listing} onPress={() => router.push(`/listing-details?id=${listing.id}`)} />)
       ) : (
-        <StateView title="Sin anuncios propios" description="Publica una venta o busqueda desde la pestana central." />
+        <StateView title="Sin anuncios propios" description="Publica una venta o búsqueda desde la pestaña central." />
       )}
 
-      <Button title="Cerrar sesion" variant="danger" onPress={logout} />
+      <Button title="Cerrar sesión" variant="danger" onPress={logout} />
     </Screen>
   );
 }

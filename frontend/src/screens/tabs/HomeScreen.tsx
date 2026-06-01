@@ -55,9 +55,9 @@ export function HomeScreen() {
           ))
         ) : null}
         {!isLoading && !error && !listings.length ? (
-          <StateView title="Sin anuncios" description="Prueba otros filtros o vuelve cuando el backend tenga publicaciones." />
+          <StateView title="Sin anuncios" description="Prueba otros filtros o vuelve cuando hayan creado más anuncios." />
         ) : null}
-        {page < totalPages ? <Button title={isLoadingMore ? 'Cargando...' : 'Cargar mas'} variant="ghost" disabled={isLoadingMore} onPress={loadMore} /> : null}
+        {page < totalPages ? <Button title={isLoadingMore ? 'Cargando...' : 'Cargar más'} variant="secondary" disabled={isLoadingMore} onPress={loadMore} /> : null}
       </View>
     </Screen>
   );

@@ -47,16 +47,16 @@ export function CollectionScreen() {
         </View>
       </View>
 
-      <SearchInput value={query} onChangeText={setQuery} placeholder="Filtrar coleccion" />
+      <SearchInput value={query} onChangeText={setQuery} placeholder="Filtrar colección" />
 
       <SectionHeader title="Tus cartas" action="Editar en lote" />
-      {isLoading ? <StateView title="Cargando coleccion" loading /> : null}
-      {error ? <StateView title="No se ha podido cargar la coleccion" description={error} action="Reintentar" onAction={loadCollection} /> : null}
+      {isLoading ? <StateView title="Cargando colección" loading /> : null}
+      {error ? <StateView title="No se ha podido cargar la colección" description={error} action="Reintentar" onAction={loadCollection} /> : null}
       {!isLoading && !error && filtered.length ? (
         <View style={styles.grid}>
           {filtered.map((item) => (
             <View key={item.id} style={styles.tileWrap}>
-              {item.card ? <TradingCardTile card={item.card} owned /> : <StateView title={item.cardId} description="Carta pendiente de resolver por backend." />}
+              {item.card ? <TradingCardTile card={item.card} owned /> : <StateView title={item.cardId} description="Carta pendiente de resolver." />}
               <Text style={styles.meta}>
                 x{item.quantity} · {item.condition} · {item.grading.company === 'raw' ? 'Raw' : item.grading.company}
               </Text>
@@ -66,7 +66,7 @@ export function CollectionScreen() {
           ))}
         </View>
       ) : null}
-      {!isLoading && !error && !filtered.length ? <StateView title="Coleccion vacia" description="Anade cartas desde el catalogo cuando el backend este conectado." /> : null}
+      {!isLoading && !error && !filtered.length ? <StateView title="Colección vacía" description="Añade cartas desde el catálogo para empezar a gestionar tu colección." /> : null}
     </Screen>
   );
 }

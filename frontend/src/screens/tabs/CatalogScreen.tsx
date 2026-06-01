@@ -68,8 +68,8 @@ export function CatalogScreen() {
       </View>
 
       <SectionHeader title="Resultados" action={`${total} cartas`} />
-      {isLoading && !cards.length ? <StateView title="Cargando catalogo" loading /> : null}
-      {error ? <StateView title="No se ha podido cargar el catalogo" description={error} action="Reintentar" onAction={loadCards} /> : null}
+      {isLoading && !cards.length ? <StateView title="Cargando catálogo" loading /> : null}
+      {error ? <StateView title="No se ha podido cargar el catálogo" description={error} action="Reintentar" onAction={loadCards} /> : null}
       {!isLoading && !error && cards.length ? (
         <View style={styles.grid}>
           {cards.map((card) => (
@@ -83,7 +83,7 @@ export function CatalogScreen() {
         </View>
       ) : null}
       {!isLoading && !error && !cards.length ? (
-        <StateView title="No hay cartas" description="Ajusta filtros o espera a que el backend sincronice cartas." action="Limpiar filtros" onAction={resetFilters} />
+        <StateView title="No hay cartas" description="Ajusta filtros o espera a que el servidor se actualice." action="Limpiar filtros" onAction={resetFilters} />
       ) : null}
       {totalPages > 1 ? (
         <View style={styles.pagination}>
