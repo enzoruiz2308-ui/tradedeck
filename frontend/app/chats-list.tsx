@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Stack, router } from 'expo-router';
+import React, { useState, useCallback } from 'react';
+import { Stack, router, useFocusEffect } from 'expo-router';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { chatApi } from '@/src/api/chatApi';
 import { ChatSession } from '@/src/types';
@@ -12,31 +12,46 @@ export default function ChatsListScreen() {
   const [loading, setLoading] = useState(true);
   const user = useAuthStore((state) => state.user);
 
-  useEffect(() => {
-    const loadChats = async () => {
-      try {
-        const data = await chatApi.getChats();
-        setChats(data);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadChats();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      setLoading(true);
+
+      const loadChats = async () => {
+        try {
+          const data = await chatApi.getChats();
+          if (active) {
+            setChats(data);
+          }
+        } catch (e) {
+          console.error(e);
+        } finally {
+          if (active) {
+            setLoading(false);
+          }
+        }
+      };
+
+      loadChats();
+
+      return () => {
+        active = false;
+        setChats([]);
+      };
+    }, [user?.id])
+  );
 
   if (loading) {
     return (
-      <Screen style={styles.center}>
+      <Screen scroll={false} contentContainerStyle={styles.center}>
         <Stack.Screen options={{ title: 'Mis Mensajes' }} />
-        <ActivityIndicator size="large" color={palette.primary} />
+        <ActivityIndicator size="large" color={palette.pokemonBlue || palette.primary} />
       </Screen>
     );
   }
 
   return (
-    <Screen>
+    <Screen scroll={false} contentContainerStyle={chats.length === 0 ? styles.center : undefined}>
       <Stack.Screen options={{ title: 'Mis Mensajes' }} />
       {chats.length === 0 ? (
         <View style={styles.center}>

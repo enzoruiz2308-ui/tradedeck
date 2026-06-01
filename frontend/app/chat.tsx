@@ -32,8 +32,13 @@ export default function ChatScreen() {
   };
 
   useEffect(() => {
-    if (chatId) loadData();
-  }, [chatId]);
+    if (chatId) {
+      setLoading(true);
+      setChat(null);
+      setMessages([]);
+      loadData();
+    }
+  }, [chatId, user?.id]);
 
   const handleSend = async () => {
     if (!newMessage.trim() || sending) return;

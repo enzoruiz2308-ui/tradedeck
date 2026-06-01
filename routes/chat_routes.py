@@ -8,14 +8,14 @@ service = ChatService()
 def serialize_chat(chat):
     return {
         "id": chat.id,
-        "anuncio_id": chat.anuncio_id,
+        "anuncio_id": chat.listing_id,
         "comprador_id": chat.comprador_id,
         "vendedor_id": chat.vendedor_id,
         "fecha_creacion": chat.fecha_creacion.isoformat() if chat.fecha_creacion else None,
         "anuncio": {
-            "nombre_carta": chat.anuncio.nombre_carta,
-            "precio": chat.anuncio.precio
-        } if chat.anuncio else None,
+            "nombre_carta": chat.listing.card_id,
+            "precio": chat.listing.price
+        } if chat.listing else None,
         "comprador": {"id": chat.comprador.id, "nombre": chat.comprador.nombre} if chat.comprador else None,
         "vendedor": {"id": chat.vendedor.id, "nombre": chat.vendedor.nombre} if chat.vendedor else None
     }

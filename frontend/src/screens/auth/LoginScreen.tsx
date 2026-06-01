@@ -59,7 +59,7 @@ export function LoginScreen() {
         />
         {error ? <Text style={styles.error}>{error}</Text> : null}
         <Button title={isLoading ? 'Entrando...' : 'Iniciar sesion'} disabled={!formState.isValid || isLoading} onPress={onSubmit} />
-        <Button title="Entrar en modo demo" variant="secondary" onPress={enterDemo} />
+       {/*  <Button title="Entrar en modo demo" variant="secondary" onPress={enterDemo} /> */}
       </View>
 
       <Link href="/(auth)/register" style={styles.link}>

@@ -7,7 +7,6 @@ except ImportError:
     has_swagger = False
 from config import Config, db, jwt
 from routes.usuario_routes import usuario_bp
-from routes.anuncio_routes import anuncio_bp
 from routes.carta_routes import carta_bp
 from routes.auth_routes import auth_bp
 from routes.cards_routes import cards_bp
@@ -53,13 +52,12 @@ def create_app():
         return jsonify({"error": "Sesion revocada. Vuelve a iniciar sesion."}), 401
 
     app.register_blueprint(usuario_bp)
-    app.register_blueprint(anuncio_bp)
     app.register_blueprint(carta_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(cards_bp)
     app.register_blueprint(collection_bp)
-    app.register_blueprint(listings_bp)
-    app.register_blueprint(users_bp)
+    app.register_blueprint(listings_bp, url_prefix="/api")
+    app.register_blueprint(users_bp, url_prefix="/api")
     app.register_blueprint(chat_bp)
 
     with app.app_context():

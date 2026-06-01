@@ -28,7 +28,6 @@ from config import db
 from models.usuario import Usuario
 from models.user_profile import UserProfile
 from models.carta_cache import CartaCache
-from models.anuncio import Anuncio
 from models.listing import Listing
 from models.collection_item import CollectionItem
 from models.chat import ChatSession, ChatMessage
@@ -127,6 +126,26 @@ with app.app_context():
             image="https://images.optcgapi.com/cards/OP02-013.png",
             market_price=35.00,
             payload={"set": "Paramount War", "number": "OP02-013"}
+        ),
+        CartaCache(
+            external_id="OP01-006",
+            tcg="onepiece",
+            name="Otama",
+            set_name="Romance Dawn",
+            rarity="Common",
+            image="https://www.optcgapi.com/media/static/Card_Images/OP01-006.jpg",
+            market_price=0.47,
+            payload={"set": "Romance Dawn", "number": "OP01-006"}
+        ),
+        CartaCache(
+            external_id="OP13-043_ARa00EL",
+            tcg="onepiece",
+            name="Otama",
+            set_name="Carrying On His Will",
+            rarity="Rare",
+            image="https://www.optcgapi.com/media/static/Card_Images/OP13-043_ARa00EL.jpg",
+            market_price=0.29,
+            payload={"set": "Carrying On His Will", "number": "OP13-043"}
         )
     ]
 
@@ -137,15 +156,17 @@ with app.app_context():
     # --- 2. Crear Usuarios y Perfiles ---
     print("Creando usuarios de prueba con contraseñas encriptadas...")
     
-    pass_hash = bcrypt.hashpw("1234".encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+    hash_enzo = bcrypt.hashpw("Enzo1234".encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+    hash_iker = bcrypt.hashpw("Iker1234".encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+    hash_alvaro = bcrypt.hashpw("Alvaro1234".encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
     
-    u_enzo = Usuario(nombre="Enzo", email="enzo@tradedeck.com", password=pass_hash)
-    u_marc = Usuario(nombre="Marc", email="marc@tradedeck.com", password=pass_hash)
-    u_lucia = Usuario(nombre="Lucia", email="lucia@tradedeck.com", password=pass_hash)
+    u_enzo = Usuario(nombre="Enzo", email="enzo@tradedeck.com", password=hash_enzo)
+    u_iker = Usuario(nombre="Iker", email="iker@tradedeck.com", password=hash_iker)
+    u_alvaro = Usuario(nombre="Alvaro", email="alvaro@tradedeck.com", password=hash_alvaro)
     
     db.session.add(u_enzo)
-    db.session.add(u_marc)
-    db.session.add(u_lucia)
+    db.session.add(u_iker)
+    db.session.add(u_alvaro)
     db.session.flush()
 
     p_enzo = UserProfile(
@@ -154,22 +175,22 @@ with app.app_context():
         bio="Coleccionista y vendedor de cartas Pokémon Vintage y One Piece. ¡Envíos rápidos!", 
         rating=4.8
     )
-    p_marc = UserProfile(
-        usuario_id=u_marc.id, 
-        avatar="https://api.dicebear.com/7.x/adventurer/svg?seed=Marc", 
+    p_iker = UserProfile(
+        usuario_id=u_iker.id, 
+        avatar="https://api.dicebear.com/7.x/adventurer/svg?seed=Iker", 
         bio="Buscando completar mi colección de Romance Dawn. Tratos en mano en Barcelona.", 
         rating=5.0
     )
-    p_lucia = UserProfile(
-        usuario_id=u_lucia.id, 
-        avatar="https://api.dicebear.com/7.x/adventurer/svg?seed=Lucia", 
+    p_alvaro = UserProfile(
+        usuario_id=u_alvaro.id, 
+        avatar="https://api.dicebear.com/7.x/adventurer/svg?seed=Alvaro", 
         bio="Apasionada del TCG de Pokémon desde la infancia. Compro y cambio en toda España.", 
         rating=4.5
     )
     
     db.session.add(p_enzo)
-    db.session.add(p_marc)
-    db.session.add(p_lucia)
+    db.session.add(p_iker)
+    db.session.add(p_alvaro)
     db.session.flush()
 
     # --- 3. Colecciones de los Usuarios (CollectionItem) ---
@@ -177,14 +198,14 @@ with app.app_context():
     
     col_items = [
         CollectionItem(usuario_id=u_enzo.id, card_id="swsh4-74", tcg="pokemon", quantity=1, condition="Mint", notes="Mi joya de la corona"),
-        CollectionItem(usuario_id=u_enzo.id, card_id="OP01-001", tcg="onepiece", quantity=2, condition="Near Mint", notes="Para cambiar"),
-        CollectionItem(usuario_id=u_marc.id, card_id="OP01-024", tcg="onepiece", quantity=1, condition="Mint", notes="Para mazo principal"),
-        CollectionItem(usuario_id=u_marc.id, card_id="base1-58", tcg="pokemon", quantity=5, condition="Played", notes="Cartas repetidas"),
-        CollectionItem(usuario_id=u_lucia.id, card_id="sm35-78", tcg="pokemon", quantity=1, condition="Near Mint", notes="Comprada en tienda")
+        CollectionItem(usuario_id=u_enzo.id, card_id="OP01-006", tcg="onepiece", quantity=1, condition="Near Mint", notes="Otama Romance Dawn"),
+        CollectionItem(usuario_id=u_iker.id, card_id="OP13-043_ARa00EL", tcg="onepiece", quantity=1, condition="Mint", notes="Otama OP13"),
+        CollectionItem(usuario_id=u_iker.id, card_id="OP01-024", tcg="onepiece", quantity=1, condition="Mint", notes="Para cambiar"),
+        CollectionItem(usuario_id=u_alvaro.id, card_id="base1-58", tcg="pokemon", quantity=5, condition="Played", notes="Repetidas Pikachu")
     ]
     for ci in col_items:
         db.session.add(ci)
     db.session.flush()
 
     db.session.commit()
-    print("¡Base de datos local recreada y poblada con éxito (sin anuncios ni chats de demostración)!")
+    print("¡Base de datos local recreada y poblada con éxito con usuarios, colecciones y caches de Otama (sin anuncios ni chats)!")

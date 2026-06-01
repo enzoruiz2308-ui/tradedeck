@@ -1,28 +1,28 @@
 from config import db
 from models.chat import ChatSession, ChatMessage
-from models.anuncio import Anuncio
+from models.listing import Listing
 from models.usuario import Usuario
 
 class ChatService:
-    def get_or_create_chat(self, anuncio_id, comprador_id):
-        anuncio = Anuncio.query.get(anuncio_id)
-        if not anuncio:
+    def get_or_create_chat(self, listing_id, comprador_id):
+        listing = db.session.get(Listing, int(listing_id))
+        if not listing:
             return None, "Anuncio no encontrado"
         
-        if anuncio.usuario_id == comprador_id:
+        if listing.seller_id == comprador_id:
             return None, "No puedes crear un chat para tu propio anuncio"
         
         chat = ChatSession.query.filter_by(
-            anuncio_id=anuncio_id,
+            listing_id=listing_id,
             comprador_id=comprador_id,
-            vendedor_id=anuncio.usuario_id
+            vendedor_id=listing.seller_id
         ).first()
 
         if not chat:
             chat = ChatSession(
-                anuncio_id=anuncio_id,
+                listing_id=listing_id,
                 comprador_id=comprador_id,
-                vendedor_id=anuncio.usuario_id
+                vendedor_id=listing.seller_id
             )
             db.session.add(chat)
             db.session.commit()

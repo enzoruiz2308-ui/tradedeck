@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { Alert, StyleSheet, Text, View, Platform } from 'react-native';
 
 import { ListingCard } from '@/src/components/cards/ListingCard';
 import { TradingCardTile } from '@/src/components/cards/TradingCardTile';
@@ -35,17 +35,33 @@ export function ListingDetailsScreen() {
   const isOwner = Boolean(user && listing.sellerId === user.id);
 
   const confirmDelete = () => {
-    Alert.alert('Eliminar anuncio', 'Esta accion eliminara el anuncio del backend.', [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Eliminar',
-        style: 'destructive',
-        onPress: async () => {
-          await deleteListing(listing.id);
-          router.back();
+    const performDelete = async () => {
+      try {
+        await deleteListing(listing.id);
+        router.back();
+      } catch (e: any) {
+        if (Platform.OS === 'web') {
+          alert(e.message || 'No se pudo eliminar el anuncio');
+        } else {
+          Alert.alert('Error', e.message || 'No se pudo eliminar el anuncio');
+        }
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      if (window.confirm('¿Seguro que quieres eliminar este anuncio?')) {
+        void performDelete();
+      }
+    } else {
+      Alert.alert('Eliminar anuncio', 'Esta accion eliminara el anuncio del backend.', [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: () => void performDelete(),
         },
-      },
-    ]);
+      ]);
+    }
   };
 
   const handleContact = async () => {
