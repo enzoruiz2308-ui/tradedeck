@@ -38,7 +38,7 @@ function getServerMessage(error: AxiosError) {
 
 export function ensureApiUrl() {
   if (!API_URL) {
-    throw new ApiError('Backend no configurado. Define EXPO_PUBLIC_API_URL para conectar TradeDeck.', 0);
+    throw new ApiError('No se ha podido conectar con el servidor.', 0);
   }
 }
 
@@ -49,7 +49,7 @@ export function normalizeApiError(error: unknown) {
 
   if (error instanceof AxiosError) {
     return new ApiError(
-      getServerMessage(error) ?? 'No se ha podido completar la peticion con el backend.',
+      getServerMessage(error) ?? 'No se ha podido completar la peticion con el servidor.',
       error.response?.status,
     );
   }
@@ -58,7 +58,7 @@ export function normalizeApiError(error: unknown) {
     return new ApiError(error.message);
   }
 
-  return new ApiError('Error inesperado al comunicar con el backend.');
+  return new ApiError('Error inesperado al comunicar con el servidor.');
 }
 
 apiClient.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {

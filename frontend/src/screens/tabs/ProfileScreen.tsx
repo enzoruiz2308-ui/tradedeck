@@ -32,8 +32,8 @@ export function ProfileScreen() {
     return (
       <Screen contentContainerStyle={styles.center}>
         <StateView
-          title="Inicia sesion"
-          description="El perfil, tus anuncios y tu coleccion requieren una sesion autenticada en el backend TradeDeck."
+          title="Inicia sesión"
+          description="Inicia sesión para gestionar tu perfil."
           action="Entrar en demo"
           onAction={demoLogin}
         />

@@ -28,8 +28,8 @@ export function CollectionScreen() {
   return (
     <Screen>
       <View>
-        <Text style={styles.title}>Coleccion</Text>
-        <Text style={styles.subtitle}>Gestion autenticada desde /me/collection con cantidad, estado, grading y notas.</Text>
+        <Text style={styles.title}>Colección</Text>
+        <Text style={styles.subtitle}>Consulta tus cartas.</Text>
       </View>
 
       <View style={styles.stats}>
@@ -47,11 +47,11 @@ export function CollectionScreen() {
         </View>
       </View>
 
-      <SearchInput value={query} onChangeText={setQuery} placeholder="Filtrar coleccion" />
+      <SearchInput value={query} onChangeText={setQuery} placeholder="Filtrar colección" />
 
       <SectionHeader title="Tus cartas" action="Editar en lote" />
-      {isLoading ? <StateView title="Cargando coleccion" loading /> : null}
-      {error ? <StateView title="No se ha podido cargar la coleccion" description={error} action="Reintentar" onAction={loadCollection} /> : null}
+      {isLoading ? <StateView title="Cargando colección" loading /> : null}
+      {error ? <StateView title="No se ha podido cargar la colección" description={error} action="Reintentar" onAction={loadCollection} /> : null}
       {!isLoading && !error && filtered.length ? (
         <View style={styles.grid}>
           {filtered.map((item) => (
@@ -66,7 +66,7 @@ export function CollectionScreen() {
           ))}
         </View>
       ) : null}
-      {!isLoading && !error && !filtered.length ? <StateView title="Coleccion vacia" description="Anade cartas desde el catalogo cuando el backend este conectado." /> : null}
+      {!isLoading && !error && !filtered.length ? <StateView title="Colección vacía" description="Añade cartas desde el catálogo." /> : null}
     </Screen>
   );
 }

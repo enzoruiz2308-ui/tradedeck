@@ -26,10 +26,9 @@ export function HomeScreen() {
       contentContainerStyle={styles.content}>
       <View style={styles.hero}>
         <View>
-          <Text style={styles.kicker}>TCG marketplace</Text>
           <Text style={styles.title}>TradeDeck</Text>
         </View>
-        <Text style={styles.heroCopy}>Frontend preparado para consumir el backend TradeDeck con anuncios paginados y ownership checks.</Text>
+        <Text style={styles.heroCopy}>Consulta los anuncios activos.</Text>
       </View>
 
       <SearchInput value={filters.query ?? ''} onChangeText={(query) => setFilters({ query })} />
@@ -38,7 +37,6 @@ export function HomeScreen() {
         <Chip label="Todos" active={filters.tcg === 'all'} onPress={() => setFilters({ tcg: 'all' })} />
         <Chip label="Pokemon" active={filters.tcg === 'pokemon'} onPress={() => setFilters({ tcg: 'pokemon' })} />
         <Chip label="One Piece" active={filters.tcg === 'onepiece'} onPress={() => setFilters({ tcg: 'onepiece' })} />
-        <Chip label="Activos" active={filters.status === 'active'} onPress={() => setFilters({ status: filters.status === 'active' ? 'all' : 'active' })} />
       </ScrollView>
 
       <View style={styles.section}>
